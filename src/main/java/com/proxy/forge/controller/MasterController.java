@@ -43,8 +43,20 @@ public class MasterController {
         String path = request.getRequestURI();
         Resource resource = resourceLoader.getResource("classpath:/static" + (path.equals("/") ? "/index.html" : path));
         if (resource.exists()) {
+            String fileName = resource.getFile().getName();
+            MediaType mediaType = switch (fileName.substring(fileName.lastIndexOf(".") + 1)) {
+                case "html" -> MediaType.TEXT_HTML;
+                case "css" -> MediaType.valueOf("text/css");
+                case "js" -> MediaType.valueOf("application/javascript");
+                case "json" -> MediaType.APPLICATION_JSON;
+                case "png" -> MediaType.IMAGE_PNG;
+                case "jpg", "jpeg" -> MediaType.IMAGE_JPEG;
+                case "gif" -> MediaType.IMAGE_GIF;
+                case "svg" -> MediaType.valueOf("image/svg+xml");
+                default -> MediaType.APPLICATION_OCTET_STREAM;
+            };
             return ResponseEntity.ok()
-                    .contentType(MediaType.TEXT_HTML)
+                    .contentType(mediaType)
                     .body(resource.getInputStream().readAllBytes());
         }
         return ResponseEntity.ok().body(request.getRequestURI());
