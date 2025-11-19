@@ -1,5 +1,6 @@
 package com.proxy.forge.controller;
 
+import com.proxy.forge.service.ProxyRouterService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,8 @@ public class MasterController {
 
     @Autowired
     private ResourceLoader resourceLoader;
+    @Autowired
+    ProxyRouterService proxyRouterService;
 
     /**
      * 处理所有入站请求并返回请求URI。
@@ -59,7 +62,7 @@ public class MasterController {
                     .contentType(mediaType)
                     .body(resource.getInputStream().readAllBytes());
         }
-        return ResponseEntity.ok().body(request.getRequestURI());
+        return proxyRouterService.dispatch(request, response);
     }
 
 
@@ -69,7 +72,7 @@ public class MasterController {
     }
 
     @RequestMapping(value = "/sr")
-    public Object startRequest(HttpServletRequest request, HttpServletResponse response){
+    public Object startRequest(HttpServletRequest request, HttpServletResponse response) {
         return ResponseEntity.ok().body("sr");
     }
 }
