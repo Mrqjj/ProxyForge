@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.vivcms.mirror</groupId>
     <artifactId>ProxyForge</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1</version>
     <name>ProxyForge</name>
     <description>ProxyForge reverse proxy target website!</description>
     <properties>
@@ -78,6 +78,7 @@
             <groupId>org.springframework.session</groupId>
             <artifactId>spring-session-data-redis</artifactId>
         </dependency>
+        <!--   apache http请求客户端     -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
@@ -85,7 +86,7 @@
         </dependency>
 
 
-        <!--Java二维码相关依赖-->
+        <!-- lombok 插件 -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -110,56 +111,33 @@
             <version>${fastjson.version}</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api -->
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>4.0.1</version>
-            <scope>provided</scope>
-        </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.19.0</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/jakarta.xml.bind/jakarta.xml.bind-api -->
-        <dependency>
-            <groupId>jakarta.xml.bind</groupId>
-            <artifactId>jakarta.xml.bind-api</artifactId>
-            <version>4.0.2</version>
-        </dependency>
-
+        <!--    处理dom文本档    -->
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
-            <version>1.17.2</version>   <!-- 任选最新版 -->
+            <version>1.21.2</version>   <!-- 任选最新版 -->
         </dependency>
 
         <!--   证书申请     -->
+        <!-- https://mvnrepository.com/artifact/org.shredzone.acme4j/acme4j-client -->
         <dependency>
             <groupId>org.shredzone.acme4j</groupId>
             <artifactId>acme4j-client</artifactId>
-            <version>3.1.0</version>
+            <version>3.5.1</version>
         </dependency>
-
+        <!--  插件端使用该引用需要 <scope>provided</scope>  -->
         <dependency>
             <groupId>org.shredzone.acme4j</groupId>
             <artifactId>acme4j-utils</artifactId>
             <version>2.16</version>
         </dependency>
-
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk18on</artifactId>
-            <version>1.78</version>
-        </dependency>
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk18on</artifactId>
-            <version>1.78</version>
-        </dependency>
-
+        <!--  插件端使用该引用需要 <scope>provided</scope>  -->
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
