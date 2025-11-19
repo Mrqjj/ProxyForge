@@ -8,15 +8,15 @@ import java.net.UnknownHostException;
 import java.util.Map;
 
 /**
- * <p>ProjectName: baiduSEOProject</p>
- * <p>PackageName: com.seo.utils</p>
+ * <p>ProjectName: proxy-forge</p>
+ * <p>PackageName: com.proxy.forge.tools</p>
  * <p>Description: HTTPClient 自定义DNS重写类</p>
- * <p>Copyright: Copyright (c) 2024 by Ts</p>
+ * <p>Copyright: Copyright (c) 2025 by Ts</p>
  * <p>Contacts: Ts vx: Q_Q-1992</p>
  *
  * @Author: Ts
  * @Version: 1.0
- * @Date: 2023-08-03 10:02
+ * @Date: 2025-11-20 01:02
  **/
 @Data
 public class DnsResolverHost implements DnsResolver {

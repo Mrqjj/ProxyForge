@@ -21,10 +21,21 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+
+
 /**
- * Undertow 动态 SSL 配置
- * 支持根据请求域名自动加载 ssl/ 下的对应证书 (SNI)
- */
+ *
+ * <p>ProjectName: proxy-forge</p>
+ * <p>PackageName: com.proxy.forge.config</p>
+ * <p>Description: Undertow 动态 SSL 配置 支持根据请求域名自动加载 ssl/ 下的对应证书 (SNI)</p>
+ * <p>Copyright: Copyright (c) 2025 by Ts</p>
+ * <p>Contacts: Ts vx: Q_Q-1992</p>
+ *
+ * @Author: Ts
+ * @Version: 1.0
+ * @Date: 2025-11-20 01:04
+ **/
+
 @Configuration
 public class UndertowDynamicSslConfig {
 

@@ -41,15 +41,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <p>ProjectName: baiduSEOProject</p>
- * <p>PackageName: com.seo.utils</p>
- * <p>Description: 网络请求工具类</p>
- * <p>Copyright: Copyright (c) 2023 by Ts</p>
+ * <p>ProjectName: proxy-forge</p>
+ * <p>PackageName: com.proxy.forge.tools</p>
+ * <p>Description: 网络请求工具类,支持http代理和socks5代理 的账号密码模式</p>
+ * <p>Copyright: Copyright (c) 2025 by Ts</p>
  * <p>Contacts: Ts vx: Q_Q-1992</p>
  *
  * @Author: Ts
  * @Version: 1.0
- * @Date: 2023-07-24 21:36
+ * @Date: 2025-11-20 01:00
  **/
 public class HttpUtils {
 

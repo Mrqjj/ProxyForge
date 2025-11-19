@@ -10,15 +10,15 @@ import org.springframework.web.servlet.ModelAndView;
 
 
 /**
- * <p>ProjectName: wechat</p>
- * <p>PackageName: com.wechat.interceptor</p>
- * <p>Description: 用户登录拦截器</p>
+ * <p>ProjectName: proxy-forge</p>
+ * <p>PackageName: com.proxy.forge.interceptor</p>
+ * <p>Description: 全局拦截器</p>
  * <p>Copyright: Copyright (c) 2024 by Ts</p>
  * <p>Contacts: Ts vx: Q_Q-1992</p>
  *
  * @Author: Ts.
  * @Version: 1.0
- * @Date: 2024-04-30 12:00
+ * @Date: 2025-11-20 00:58
  **/
 @Component
 public class GlobalInterceptor implements HandlerInterceptor {
