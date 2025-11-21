@@ -62,7 +62,7 @@ public class UndertowDynamicSslConfig {
         try {
             File certFile = findCertFile(domain);
             if (certFile == null) return null;
-
+            // 这里重新加载证书，如果证书文件创建的时间有变化
             DomainKeyManager cached = KEY_MANAGER_CACHE.get(domain);
             if (cached != null && cached.getLastModified() == certFile.lastModified()) {
                 return cached;
@@ -77,8 +77,7 @@ public class UndertowDynamicSslConfig {
             PrivateKey privateKey = (PrivateKey) ks.getKey(alias, SSL_PASSWORD.toCharArray());
             X509Certificate[] chain = Arrays.stream(ks.getCertificateChain(alias))
                     .toArray(X509Certificate[]::new);
-
-            checkCertificateValidity(certFile.getName(), chain[0]);
+            checkCertificateValidity(domain, alias, certFile.getName(), chain[0]);
 
             DomainKeyManager km = new DomainKeyManager(alias, privateKey, chain, certFile.lastModified());
             KEY_MANAGER_CACHE.put(domain, km);
@@ -89,7 +88,7 @@ public class UndertowDynamicSslConfig {
         }
     }
 
-    private static void checkCertificateValidity(String name, X509Certificate cert) {
+    private static void checkCertificateValidity(String domain, String alias, String name, X509Certificate cert) {
         Date now = new Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         long remainDays = (cert.getNotAfter().getTime() - now.getTime()) / 1000 / 3600 / 24;
@@ -97,7 +96,10 @@ public class UndertowDynamicSslConfig {
         System.out.println("   生效日期: " + sdf.format(cert.getNotBefore()));
         System.out.println("   过期日期: " + sdf.format(cert.getNotAfter()));
         System.out.println("   剩余天数: " + remainDays);
+        System.out.println("📡 请求域名: " + domain);
+        System.out.println("☃️   Alias: " + alias);
         if (remainDays <= 10) {
+            // 这里应该推送任务, 开始申请证书
             System.err.println("⚠️ 警告：证书将在 " + remainDays + " 天后过期: " + name);
         }
     }
@@ -112,7 +114,8 @@ public class UndertowDynamicSslConfig {
             if (idn.isUnderPublicSuffix()) {
                 candidates.add(SSL_DIR + "_." + idn.topPrivateDomain() + "/" + "_." + idn.topPrivateDomain() + ".p12");
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         for (String path : candidates) {
             File f = new File(path);
@@ -134,10 +137,21 @@ public class UndertowDynamicSslConfig {
             this.lastModified = lastModified;
         }
 
-        public long getLastModified() { return lastModified; }
-        public String getAlias() { return alias; }
-        public PrivateKey getPrivateKey() { return privateKey; }
-        public X509Certificate[] getCertificateChain() { return certificateChain; }
+        public long getLastModified() {
+            return lastModified;
+        }
+
+        public String getAlias() {
+            return alias;
+        }
+
+        public PrivateKey getPrivateKey() {
+            return privateKey;
+        }
+
+        public X509Certificate[] getCertificateChain() {
+            return certificateChain;
+        }
     }
 
     static class DynamicKeyManager extends X509ExtendedKeyManager {
@@ -199,13 +213,20 @@ public class UndertowDynamicSslConfig {
 
         // 客户端方法无需实现
         @Override
-        public String chooseClientAlias(String[] keyType, Principal[] issuers, Socket socket) { return null; }
+        public String chooseClientAlias(String[] keyType, Principal[] issuers, Socket socket) {
+            return null;
+        }
+
         @Override
-        public String[] getClientAliases(String keyType, Principal[] issuers) { return null; }
+        public String[] getClientAliases(String keyType, Principal[] issuers) {
+            return null;
+        }
+
         @Override
         public String chooseServerAlias(String keyType, Principal[] issuers, Socket socket) {
             return chooseEngineServerAlias(keyType, issuers, null);
         }
+
         @Override
         public String[] getServerAliases(String keyType, Principal[] issuers) {
             List<String> aliases = new ArrayList<>();
