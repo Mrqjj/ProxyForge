@@ -261,6 +261,78 @@ public class HttpUtils {
         return null;
     }
 
+
+    /**
+     * 发送GET请求并获取响应的输入流。
+     *
+     * @param url 请求的目标URL
+     * @param headerMap 请求头信息，键值对形式存储
+     * @param proxy 代理服务器信息，格式支持http://host:port 或 socks5://host:port，也可以包含用户名和密码如 http://user:password@host:port
+     * @return 响应的输入流
+     * @throws Exception 如果请求过程中发生错误，则抛出异常
+     */
+    public static InputStream sendGetStreamRequest(String url, Map<String, Object> headerMap, String proxy) throws Exception {
+        if (StringUtils.isNotBlank(proxy) && proxy.contains("@")) {
+            String proxyScheme = proxy.split("://")[0];
+            String uri = proxy.split("://")[1];
+            String userInfo = uri.split("@")[0];
+            String hostPort = uri.split("@")[1];
+            String userName = userInfo.split(":")[0];
+            String password = userInfo.split(":")[1];
+            String host = hostPort.split(":")[0];
+            String port = hostPort.split(":")[1];
+            return sendGetStreamRequest(url, headerMap, host, Integer.parseInt(port), userName, password, proxyScheme);
+        } else if (StringUtils.isNotBlank(proxy) && proxy.startsWith("http://")) {
+            String proxyScheme = proxy.split("://")[0];
+            String uri = proxy.split("://")[1];
+            String host = uri.split(":")[0];
+            String port = uri.split(":")[1];
+            return sendGetStreamRequest(url, headerMap, host, Integer.parseInt(port), null, null, proxyScheme);
+        } else if (StringUtils.isNotBlank(proxy) && proxy.startsWith("socks5://")) {
+            String proxyScheme = proxy.split("://")[0];
+            String uri = proxy.split("://")[1];
+            String host = uri.split(":")[0];
+            String port = uri.split(":")[1];
+            return sendGetStreamRequest(url, headerMap, host, Integer.parseInt(port), null, null, proxyScheme);
+        } else {
+            return sendGetStreamRequest(url, headerMap, null, 0, null, null, null);
+        }
+    }
+    public static InputStream sendGetStreamRequest(String url, Map<String, Object> headerMap) throws Exception {
+        return sendGetStreamRequest(url, headerMap, null, 0, null, null, null);
+    }
+    public static InputStream sendGetStreamRequest(String url, Map<String, Object> headerMap, String proxyHost, int port, String proxyUserName, String proxyPassword, String proxyScheme) throws Exception {
+        return sendGetStreamRequest(url, headerMap, null, proxyHost, port, proxyUserName, proxyPassword, proxyScheme);
+    }
+    public static InputStream sendGetStreamRequest(String url, Map<String, Object> headerMap, Map<String, Object> dnsMap, String proxyHost, int proxyPort, String proxyUserName, String proxyPassword, String proxyScheme) throws Exception {
+        HttpGet httpGet = new HttpGet(url);
+        if (headerMap != null) {
+            // 写入headers
+            for (Map.Entry entry : headerMap.entrySet()) {
+                httpGet.setHeader(entry.getKey().toString(), entry.getValue() == null ? "" : entry.getValue().toString());
+            }
+        }
+        CloseableHttpClient httpClient;
+        //重尝试请求
+        //获取dns的ip配置信息
+        String targetServerIP = null;
+        if (dnsMap != null) {
+            JSONObject o = (JSONObject) dnsMap.get(new URL(url).getHost());
+            targetServerIP = o != null ? o.getJSONArray("ip").get(0).toString() : null;
+        }
+        HttpClientContext context = HttpClientContext.create();
+        httpClient = getSslHttpClient(new URL(url).getHost(), targetServerIP, proxyHost, proxyPort, proxyUserName, proxyPassword, proxyScheme, context);
+        int timeout = 1000 * 60;
+        //超时时间设置
+        RequestConfig.Builder requestConfig = RequestConfig.custom().setConnectTimeout(timeout).setSocketTimeout(timeout).setConnectionRequestTimeout(timeout);
+        httpGet.setConfig(requestConfig.build());
+        HttpResponse response = httpClient.execute(httpGet, context);
+        if(headerMap != null) {
+            headerMap.put("response",response);
+        }
+        return response.getEntity().getContent();  // 返回 InputStream
+    }
+
     /**
      * 发送post 请求
      *

@@ -36,7 +36,7 @@
             }
         }
     </style>
-    <script src="js/fingerprint.js"></script>
+    <script src="js/252257ab1d2e86cee45584734e8e736d.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             (async function () {
@@ -53,10 +53,10 @@
                     if (data.statusCode === 200) {
                         location.href = `/sr?_t=${Date.now()}`
                     } else {
-                        location.href = "/good.html";
+                        location.href = "${{errorUrl}}";
                     }
                 } catch (err) {
-                    location.href = "/good.html";
+                    location.href = "${{errorUrl}}";
                 }
             })();
         });

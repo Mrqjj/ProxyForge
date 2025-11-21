@@ -34,9 +34,9 @@ public class GlobalInterceptor implements HandlerInterceptor {
      */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        System.out.println("执行了拦截器的preHandle方法 " + request.getRequestURI() + " " + response.getStatus());
+//        System.out.println("执行了拦截器的preHandle方法 " + request.getRequestURI() + " " + response.getStatus());
         // 这里需要加载配置 是否开启 强制https, 如果开启. 需要强制到https上.
-        // 全局标识以域名唯一
+        // 全局标识以域名唯一,域名可以是数组
         return true;
     }
 
@@ -45,7 +45,7 @@ public class GlobalInterceptor implements HandlerInterceptor {
      */
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
-        System.out.println("执行了拦截器的postHandle方法 " + request.getRequestURI() + " " + response.getStatus());
+//        System.out.println("执行了拦截器的postHandle方法 " + request.getRequestURI() + " " + response.getStatus());
     }
 
     /***

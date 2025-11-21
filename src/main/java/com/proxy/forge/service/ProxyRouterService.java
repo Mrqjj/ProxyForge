@@ -29,6 +29,6 @@ public interface ProxyRouterService {
      * @return 一个ResponseEntity对象，封装了响应体和状态码，头部，以及 HTTP 响应所需的其他元数据。
      *
      */
-    ResponseEntity<?> dispatch(HttpServletRequest request, HttpServletResponse response);
+    Object dispatch(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
 }

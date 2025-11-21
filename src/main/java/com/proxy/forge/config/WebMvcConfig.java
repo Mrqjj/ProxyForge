@@ -28,10 +28,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-//        registry.addInterceptor(globalInterceptor)
-//                .addPathPatterns("/**") // intercept all requests
+        registry.addInterceptor(globalInterceptor)
+                .addPathPatterns("/**") // intercept all requests
 //                .excludePathPatterns("") // You can exclude static resources or specific interfaces
-//                ;
+                ;
     }
 
 }

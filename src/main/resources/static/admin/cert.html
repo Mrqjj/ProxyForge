@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>临时证书申请</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-light">
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header text-center fw-bold">证书申请</div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">域名</label>
+                        <input type="text" id="domain" class="form-control" placeholder="example.com"/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">验证方式(泛解析,只支持NDS且需手动配合)HTTP全自动</label>
+                        <select name="method" id="method">
+                            <option value="HTTP">HTTP</option>
+                            <option value="DNS">DNS</option>
+                            <option value="Other">Other</option>
+                        </select>
+
+                    </div>
+                    <div class="d-grid mb-3">
+                        <button class="btn btn-primary" id="btnApply">申请证书</button>
+                    </div>
+
+                    <div class="d-grid mb-3">
+                        <button class="btn btn-primary" id="btnCheck">验证状态</button>
+                    </div>
+
+                    <div id="statusBox" class="alert d-none"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const api = "/pfadmin/certrequest";
+    const apiCheck = "/pfadmin/certcheck";
+    let token = "";
+
+    function setStatus(msg, type) {
+        const box = document.getElementById("statusBox");
+        box.className = `alert alert-${type}`;
+        box.textContent = msg;
+        box.classList.remove("d-none");
+    }
+
+    document.getElementById("btnCheck").onclick = async () => {
+        setStatus("正在验证结果,请稍后...", "info");
+        const domain = document.getElementById("domain").value.trim();
+        const method = document.getElementById("method").value.trim();
+        try {
+            const resp = await fetch(apiCheck, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({"token": token, "domain": domain, "method": method})
+            });
+            const data = await resp.json();
+            if (data.statusCode === 200) {
+                setStatus("证书申请成功！且部署成功。", "success");
+                return;
+            } else if (data.statusCode === 201) {
+                setStatus(data.message, "danger");
+                return;
+            } else {
+                setStatus(data.message, "danger");
+            }
+        } catch (e) {
+            setStatus("服务器异常，请稍后再试。", "danger");
+        }
+    }
+
+    document.getElementById("btnApply").onclick = async () => {
+        const domain = document.getElementById("domain").value.trim();
+        const method = document.getElementById("method").value.trim();
+        if (!domain) {
+            setStatus("请输入域名", "warning");
+            return;
+        }
+
+        setStatus("正在提交申请...", "info");
+
+        try {
+            const resp = await fetch(api, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({"token": "", "domain": domain, "method": method}),
+                timeout: 15000
+            });
+
+            const data = await resp.json();
+            if (data.statusCode === 200) {
+                token = data.data;
+                setStatus(data.message, "info");
+                return;
+            }else{
+                setStatus(data.message, "danger");
+            }
+        } catch (err) {
+            setStatus("请求失败，请检查网络", "danger");
+        }
+    };
+</script>
+</body>
+</html>
