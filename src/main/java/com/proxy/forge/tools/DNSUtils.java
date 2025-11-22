@@ -1,6 +1,5 @@
 package com.proxy.forge.tools;
 
-import com.alibaba.fastjson2.JSONObject;
 import org.xbill.DNS.*;
 import org.xbill.DNS.Record;
 
@@ -8,278 +7,147 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
- * <p>ProjectName: proxy-forge</p>
- * <p>PackageName: com.proxy.forge.tools</p>
- * <p>Description: dns查询工具类</p>
- * <p>Copyright: Copyright (c) 2023 by Ts</p>
- * <p>Contacts: Ts vx: Q_Q-1992</p>
- *
- * @Author: Ts
- * @Version: 1.0
- * @Date: 2025-11-21 16:17
- **/
-
-/**
- * DNS 工具类
- * 支持 A/AAAA/CNAME/TXT/MX/NS/SOA/SRV/NAPTR/CAA/PTR 等查询
- * 默认绕过系统 DNS，使用可信公共 DNS 服务器
+ * DNS 工具类（修复版）
+ * 每个 DNS 查询一次，并返回对应的结果
  */
-
-
 public class DNSUtils {
 
-    // 默认公共 DNS 服务器，避免被增强模式劫持
+    // 默认公共 DNS 列表
     private static final String[] DEFAULT_DNS_SERVERS = {
-            "8.8.8.8",      // Google
-            "1.1.1.1",      // Cloudflare
-            "1.0.0.1",      // Cloudflare
-            "8.8.4.4",      // Google
-            "9.9.9.9",       // Quad9
-            "114.114.114.114", //114
-            "223.5.5.5",       //阿里
-            "223.6.6.6",       //阿里
-            "119.29.29.29",    //腾讯
-            "180.76.76.76",    //百度
+            "8.8.8.8",
+            "1.1.1.1",
+            "1.0.0.1",
+            "8.8.4.4",
+            "9.9.9.9",
+            "114.114.114.114",
+            "223.5.5.5",
+            "223.6.6.6",
+            "119.29.29.29",
+            "180.76.76.76",
     };
 
     /**
-     * 创建带超时的 Resolver
+     * 单个 DNS 查询的结果结构
      */
-    private static Resolver createResolver(String dns) throws Exception {
-        SimpleResolver resolver = new SimpleResolver(dns);
-        resolver.setTCP(true);
-        resolver.setTimeout(3); // 3 秒超时
-        return resolver;
+    public static class ResultItem {
+        public String dns;
+        public List<String> answers = new ArrayList<>();
+        public int result = -1;
+
+        public String toString() {
+            return "DNS=" + dns + ", result=" + result + ", answers=" + answers;
+        }
     }
 
     /**
-     * 运行 Lookup，自动 fallback 多个 DNS
+     * 对每个 DNS 服务器执行一次查询
      */
-    private static Lookup runLookup(String domain, int type) {
-        try {
-            Lookup lookup = new Lookup(domain, type);
-            for (String dns : DEFAULT_DNS_SERVERS) {
-                lookup.setResolver(createResolver(dns));
+    private static List<ResultItem> queryAllDNS(String domain, int type) {
+        List<ResultItem> resultList = new ArrayList<>();
+
+        for (String dns : DEFAULT_DNS_SERVERS) {
+            ResultItem item = new ResultItem();
+            item.dns = dns;
+
+            try {
+                SimpleResolver resolver = new SimpleResolver(dns);
+                resolver.setTimeout(3);
+                resolver.setTCP(true);
+
+                Lookup lookup = new Lookup(domain, type);
+                lookup.setResolver(resolver);
+
                 lookup.run();
-                if (lookup.getResult() == Lookup.SUCCESSFUL) {
-                    return lookup;
+                item.result = lookup.getResult();
+
+                if (lookup.getAnswers() != null) {
+                    for (Record r : lookup.getAnswers()) {
+                        item.answers.add(r.rdataToString());
+                    }
                 }
+
+            } catch (Exception e) {
+                item.result = Lookup.TRY_AGAIN;
             }
-        } catch (Exception ignored) {
+
+            resultList.add(item);
         }
-        return null;
+
+        return resultList;
     }
 
-    /**
-     * 查询 A 记录
-     */
-    public static List<String> getA(String domain) {
-        List<String> list = new ArrayList<>();
-        Lookup lookup = runLookup(domain, Type.A);
-        if (lookup.getResult() == Lookup.SUCCESSFUL) {
-            for (Record r : lookup.getAnswers()) {
-                list.add(((ARecord) r).getAddress().getHostAddress());
+    // ----------------------
+    //    各种查询方法
+    // ----------------------
+
+    public static List<ResultItem> getA(String domain) {
+        List<ResultItem> list = queryAllDNS(domain, Type.A);
+
+        // 转换 ARecord
+        for (ResultItem item : list) {
+            List<String> ips = new ArrayList<>();
+            for (String r : item.answers) {
+                ips.add(r);
             }
+            item.answers = ips;
         }
+
         return list;
     }
 
-    /**
-     * 查询 AAAA 记录
-     */
-    public static List<String> getAAAA(String domain) {
-        List<String> list = new ArrayList<>();
-        Lookup lookup = runLookup(domain, Type.AAAA);
-        if (lookup.getResult() == Lookup.SUCCESSFUL) {
-            for (Record r : lookup.getAnswers()) {
-                list.add(((AAAARecord) r).getAddress().getHostAddress());
-            }
-        }
-        return list;
+    public static List<ResultItem> getAAAA(String domain) {
+        return queryAllDNS(domain, Type.AAAA);
+    }
+
+    public static List<ResultItem> getCNAME(String domain) {
+        return queryAllDNS(domain, Type.CNAME);
+    }
+
+    public static List<ResultItem> getTXT(String domain) {
+        return queryAllDNS(domain, Type.TXT);
+    }
+
+    public static List<ResultItem> getMX(String domain) {
+        return queryAllDNS(domain, Type.MX);
+    }
+
+    public static List<ResultItem> getNS(String domain) {
+        return queryAllDNS(domain, Type.NS);
+    }
+
+    public static List<ResultItem> getSOA(String domain) {
+        return queryAllDNS(domain, Type.SOA);
+    }
+
+    public static List<ResultItem> getSRV(String domain) {
+        return queryAllDNS(domain, Type.SRV);
+    }
+
+    public static List<ResultItem> getNAPTR(String domain) {
+        return queryAllDNS(domain, Type.NAPTR);
+    }
+
+    public static List<ResultItem> getCAA(String domain) {
+        return queryAllDNS(domain, Type.CAA);
+    }
+
+    public static List<ResultItem> getPTR(String domain) {
+        return queryAllDNS(domain, Type.PTR);
     }
 
     /**
-     * 查询 CNAME
-     */
-    public static String getCNAME(String domain) {
-        Lookup lookup = runLookup(domain, Type.CNAME);
-        if (lookup.getResult() == Lookup.SUCCESSFUL && lookup.getAnswers().length > 0) {
-            return ((CNAMERecord) lookup.getAnswers()[0]).getTarget().toString(true);
-        }
-        return null;
-    }
-
-    /**
-     * 查询 TXT 记录
-     */
-    public static List<String> getTXT(String domain) {
-        List<String> list = new ArrayList<>();
-        Lookup lookup = runLookup(domain, Type.TXT);
-        if (lookup.getResult() == Lookup.SUCCESSFUL) {
-            for (Record r : lookup.getAnswers()) {
-                list.addAll(((TXTRecord) r).getStrings());
-            }
-        }
-        return list;
-    }
-
-    /**
-     * 查询 MX 记录
-     */
-    public static List<String> getMX(String domain) {
-        List<String> list = new ArrayList<>();
-        Lookup lookup = runLookup(domain, Type.MX);
-        if (lookup.getResult() == Lookup.SUCCESSFUL) {
-            for (Record r : lookup.getAnswers()) {
-                MXRecord mx = (MXRecord) r;
-                list.add(mx.getTarget().toString(true) + " (priority=" + mx.getPriority() + ")");
-            }
-        }
-        return list;
-    }
-
-    /**
-     * 查询 NS 记录
-     */
-    public static List<String> getNS(String domain) {
-        List<String> list = new ArrayList<>();
-        Lookup lookup = runLookup(domain, Type.NS);
-        if (lookup.getResult() == Lookup.SUCCESSFUL) {
-            for (Record r : lookup.getAnswers()) {
-                list.add(((NSRecord) r).getTarget().toString(true));
-            }
-        }
-        return list;
-    }
-
-    /**
-     * 查询 SOA 记录
-     */
-    public static String getSOA(String domain) {
-        Lookup lookup = runLookup(domain, Type.SOA);
-        if (lookup.getResult() == Lookup.SUCCESSFUL && lookup.getAnswers().length > 0) {
-            SOARecord soa = (SOARecord) lookup.getAnswers()[0];
-            return "MNAME=" + soa.getHost() + ", RNAME=" + soa.getAdmin() +
-                    ", SERIAL=" + soa.getSerial() + ", REFRESH=" + soa.getRefresh();
-        }
-        return null;
-    }
-
-    /**
-     * 查询 SRV 记录
-     */
-    public static List<String> getSRV(String domain) {
-        List<String> list = new ArrayList<>();
-        Lookup lookup = runLookup(domain, Type.SRV);
-        if (lookup.getResult() == Lookup.SUCCESSFUL) {
-            for (Record r : lookup.getAnswers()) {
-                SRVRecord srv = (SRVRecord) r;
-                list.add(srv.getTarget().toString(true) + ":" + srv.getPort() +
-                        " (priority=" + srv.getPriority() + ", weight=" + srv.getWeight() + ")");
-            }
-        }
-        return list;
-    }
-
-    /**
-     * 查询 NAPTR 记录
-     */
-    public static List<String> getNAPTR(String domain) {
-        List<String> list = new ArrayList<>();
-        Lookup lookup = runLookup(domain, Type.NAPTR);
-        if (lookup.getResult() == Lookup.SUCCESSFUL) {
-            for (Record r : lookup.getAnswers()) {
-                NAPTRRecord naptr = (NAPTRRecord) r;
-                list.add("Order=" + naptr.getOrder() + ", Pref=" + naptr.getPreference() +
-                        ", Flags=" + naptr.getFlags() + ", Service=" + naptr.getService() +
-                        ", Regexp=" + naptr.getRegexp() + ", Replacement=" + naptr.getReplacement());
-            }
-        }
-        return list;
-    }
-
-    /**
-     * 查询 CAA 记录
-     */
-    public static List<String> getCAA(String domain) {
-        List<String> list = new ArrayList<>();
-        Lookup lookup = runLookup(domain, Type.CAA);
-        if (lookup.getResult() == Lookup.SUCCESSFUL) {
-            for (Record r : lookup.getAnswers()) {
-                CAARecord caa = (CAARecord) r;
-                list.add("Tag=" + caa.getTag() + ", Value=" + caa.getValue());
-            }
-        }
-        return list;
-    }
-
-    /**
-     * 查询 PTR 记录
-     */
-    public static List<String> getPTR(String domain) {
-        List<String> list = new ArrayList<>();
-        Lookup lookup = runLookup(domain, Type.PTR);
-        if (lookup.getResult() == Lookup.SUCCESSFUL) {
-            for (Record r : lookup.getAnswers()) {
-                list.add(((PTRRecord) r).getTarget().toString(true));
-            }
-        }
-        return list;
-    }
-
-    /**
-     * 检查是否有有效 A 或 AAAA（适合 ACME）
+     * 判断是否至少一个 DNS 返回 A 或 AAAA
      */
     public static boolean hasAorAAAA(String domain) {
-        return !getA(domain).isEmpty() || !getAAAA(domain).isEmpty();
+        return getA(domain).stream().anyMatch(r -> !r.answers.isEmpty()) ||
+                getAAAA(domain).stream().anyMatch(r -> !r.answers.isEmpty());
     }
 
-    /**
-     * 打印完整 DNS 信息
-     */
-    public static void printAll(String domain) {
-        System.out.println("==== DNS Info for: " + domain + " ====");
-        System.out.println("A: " + getA(domain));
-        System.out.println("AAAA: " + getAAAA(domain));
-        System.out.println("CNAME: " + getCNAME(domain));
-        System.out.println("MX: " + getMX(domain));
-        System.out.println("NS: " + getNS(domain));
-        System.out.println("TXT: " + getTXT(domain));
-        System.out.println("SOA: " + getSOA(domain));
-        System.out.println("SRV: " + getSRV(domain));
-        System.out.println("NAPTR: " + getNAPTR(domain));
-        System.out.println("CAA: " + getCAA(domain));
-        System.out.println("PTR: " + getPTR(domain));
-        System.out.println("Has A/AAAA? " + hasAorAAAA(domain));
-    }
-
+    // 查询域名解析结果 使用dns服务器节点查询
     public static void main(String[] args) {
-        System.out.println(getTXT("_acme-challenge.vivcms.com"));
-    }
-
-    /**
-     * 检查域名解析是否生效到本机
-     * 该方法尝试通过DNS解析给定域名并返回
-     * 一个布尔值表示解析是否成功。
-     *
-     * @param domain 用于检测分辨率
-     * @return 如果域名解析正确，则为 true;否则为 false
-     */
-    public static boolean checkDomainNameResolution_A(String domain) {
-        String getIpUrl = "https://ipinfo.io";
-        try {
-            byte[] res = HttpUtils.sendGetRequest(getIpUrl, null, null);
-            String ip = JSONObject.parseObject(new String(res)).getString("ip");
-            System.out.println("当前IP地址:  " + ip);
-            if (getA(domain).contains(ip)) {
-                return true;
-            } else {
-                System.err.println("域名 [" + domain + "] 解析未生效...");
-                return false;
-            }
-        } catch (Exception e) {
-            return true;
+        List<DNSUtils.ResultItem> list = getA("fsdfdf3123.notifiction.art");
+        for (DNSUtils.ResultItem r : list) {
+            System.out.println(r);
         }
     }
 }
