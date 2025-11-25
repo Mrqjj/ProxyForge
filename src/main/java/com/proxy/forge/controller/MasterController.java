@@ -67,7 +67,9 @@ public class MasterController {
             byte[] bytes = resource.getInputStream().readAllBytes();
             if (fileName.equalsIgnoreCase("index.html")) {
                 String fileText = new String(bytes, StandardCharsets.UTF_8);
-                bytes = fileText.replaceAll("\\$\\{\\{errorUrl}}", "").getBytes(StandardCharsets.UTF_8);
+                fileText = fileText.replaceAll("\\$\\{\\{errorUrl}}", "从配置读取跳转url");
+                fileText = fileText.replaceAll("<!--统计代码-->", "从配置读取统计代码");
+                bytes = fileText.getBytes(StandardCharsets.UTF_8);
             }
             // 插入检查失败跳转目标,读取配置
             return ResponseEntity.ok()

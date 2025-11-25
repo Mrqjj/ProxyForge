@@ -21,7 +21,7 @@ public interface DomainCertificateService {
      * 使用指定认证类型为指定域创建证书请求。
      *
      * @param domain：创建证书请求的域。
-     * @param authType 用于证书请求的认证类型。
+     * @param authType         用于证书请求的认证类型。
      * @return 表示证书请求结果或状态的对象。
      */
     Object createCertificateRequest(String domain, CertificateManagement.AuthType authType);
@@ -33,7 +33,7 @@ public interface DomainCertificateService {
      * @return 表示证书检查请求结果或状态的对象。
      * - 200: 表示成功且已完成。
      * - 201: 表示仍在处理中。
-     * - 202: 表示已完成但不成功。
+     * - 202: 表示已完成但不成功,需要继续请求验证
      * - 500: 表示发生异常情况。
      */
     Object createCertificateChcekRequest(String token);

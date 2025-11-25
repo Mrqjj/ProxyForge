@@ -19,6 +19,13 @@ public class DNSUtils {
             "1.0.0.1",
             "8.8.4.4",
             "9.9.9.9",
+            "208.67.222.222",
+            "94.140.14.14",
+            "185.228.168.9",
+            "64.6.64.6",
+            "8.26.56.26",
+            "4.2.2.1",
+            "195.46.39.39",
             "114.114.114.114",
             "223.5.5.5",
             "223.6.6.6",
@@ -145,7 +152,7 @@ public class DNSUtils {
 
     // 查询域名解析结果 使用dns服务器节点查询
     public static void main(String[] args) {
-        List<DNSUtils.ResultItem> list = getA("fsdfdf3123.notifiction.art");
+        List<DNSUtils.ResultItem> list = getA("sdf.notifiction.art");
         for (DNSUtils.ResultItem r : list) {
             System.out.println(r);
         }

@@ -1,7 +1,12 @@
 package com.proxy.forge;
 
+import com.proxy.forge.service.InitService;
+import com.proxy.forge.service.UserSerivce;
+import com.proxy.forge.service.impl.InitServiceImpl;
+import com.proxy.forge.service.impl.UserServiceImpl;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 import java.util.TimeZone;
@@ -22,9 +27,13 @@ import java.util.TimeZone;
 @SpringBootApplication
 public class ProxyForgeApplication {
 
+
     public static void main(String[] args) {
         TimeZone.setDefault(TimeZone.getTimeZone("Asia/Shanghai"));
-        SpringApplication.run(ProxyForgeApplication.class, args);
+        ConfigurableApplicationContext run = SpringApplication.run(ProxyForgeApplication.class, args);
+        // 初始化操作
+        InitServiceImpl initService = (InitServiceImpl) run.getBean(InitService.class);
+        initService.init();
     }
 
 }
