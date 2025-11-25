@@ -1,5 +1,8 @@
 package com.proxy.forge.service;
 
+import com.proxy.forge.dto.User;
+import org.springframework.data.repository.query.Param;
+
 /**
  *
  * <p>ProjectName: proxy-forge</p>
@@ -13,6 +16,15 @@ package com.proxy.forge.service;
  * @Date: 2025-11-24 21:58
  **/
 public interface UserSerivce {
+
+
+    /**
+     * 根据用户ID更新用户信息。
+     *
+     * @param user 包含待更新信息的User对象。需要确保User对象中的id字段已正确设置，以便识别要更新的记录。
+     * @return 返回一个整数值，表示受影响的行数。如果返回值大于0，表示至少有一行被成功更新；如果返回值为0，则表示没有找到匹配的记录或更新操作未改变任何数据。
+     */
+    int updateUserById(User user);
 
 
     /**

@@ -1,6 +1,9 @@
 package com.proxy.forge.test;
 
+import com.proxy.forge.dto.User;
+import com.proxy.forge.service.UserSerivce;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 /**
@@ -19,9 +22,22 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ProxyForgeTest {
 
+    @Autowired
+    UserSerivce userSerivce;
 
     @Test
     public void test() {
         System.out.println("test");
+    }
+
+    @Test
+    public void testUpdateUser() {
+        User user = new User();
+        user.setId(1);
+        user.setUserName("root");
+        user.setPassWord("456");
+
+        System.out.println(userSerivce.updateUserById(user));
+
     }
 }
