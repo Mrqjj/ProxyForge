@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  *
  * <p>ProjectName: proxy-forge</p>
@@ -50,4 +52,13 @@ public interface UserRepository extends JpaRepository<User, Integer> {
      */
     @Query(value = "select count(*) from User ")
     int queryAllCount();
+
+    /**
+     * 根据提供的用户对象中的用户名、密码和状态查询用户。
+     *
+     * @param user 包含用户名、密码和状态信息的用户对象
+     * @return 如果找到匹配的用户，则返回该用户实体；如果未找到匹配项，则返回null
+     */
+    @Query(value = "select u from User u where u.userName=:#{#user.userName} and u.passWord=:#{#user.passWord} and u.status=:#{#user.status}")
+    User findByUserNameAndPassWord(@Param("user") User user);
 }

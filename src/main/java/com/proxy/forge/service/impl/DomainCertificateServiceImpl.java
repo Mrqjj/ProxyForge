@@ -1,5 +1,6 @@
 package com.proxy.forge.service.impl;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.proxy.forge.service.DomainCertificateService;
 import com.proxy.forge.tools.CertificateManagement;
 import com.proxy.forge.tools.DNSUtils;
@@ -42,7 +43,10 @@ public class DomainCertificateServiceImpl implements DomainCertificateService {
         try {
             CertificateManagement.OrderResult order = CertificateManagement.createOrder(domain, authType);
             if (authType == CertificateManagement.AuthType.DNS) {
-                responseApi = new ResponseApi(200, "请添加域名: [" + order.token + "] TXT 记录值: " + order.authorization, order.token);
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("token", order.token);
+                jsonObject.put("authorization", order.authorization);
+                responseApi = new ResponseApi(200, "订单创建成功.", jsonObject);
             } else if (StringUtils.isNotBlank(order.taskId) && StringUtils.isNotBlank(order.token) && StringUtils.isNotBlank(order.authorization)) {
                 stringRedisTemplate.opsForValue().set("certChalleng:" + order.token, order.authorization, 60 * 10,
                         TimeUnit.SECONDS);
@@ -73,13 +77,11 @@ public class DomainCertificateServiceImpl implements DomainCertificateService {
             CertificateManagement.CheckResult checkResult = CertificateManagement.checkOrder(token);
             if (checkResult.success && checkResult.done) {
                 responseApi = new ResponseApi(200, checkResult.message, null);
-            } else if (checkResult.done && !checkResult.success) {
-                responseApi = new ResponseApi(202, checkResult.message, null);
             } else {
-                responseApi = new ResponseApi(201, checkResult.message, null);
+                responseApi = new ResponseApi(201, checkResult.message + ", 请继续验证.", null);
             }
         } catch (Exception e) {
-            responseApi = new ResponseApi(500, e.getMessage(), null);
+            responseApi = new ResponseApi(500, e.getMessage() + "系统内部错误.请重试", null);
         }
         return responseApi;
     }

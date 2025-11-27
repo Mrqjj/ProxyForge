@@ -2,6 +2,8 @@ package com.proxy.forge.dto;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
@@ -17,9 +19,9 @@ import java.time.LocalDateTime;
  * @Date: 2025-11-24 18:12
  **/
 @Data
-@Table
+@Table(name = "user")
 @Entity
-public class User {
+public class User implements Serializable {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id

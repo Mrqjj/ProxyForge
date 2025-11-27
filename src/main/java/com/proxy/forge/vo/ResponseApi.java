@@ -22,7 +22,7 @@ public class ResponseApi {
      * 数据对象
      */
     private Object data;
-    private int total;
+    private long total;
 
     public ResponseApi(int statusCode, String message, Object data) {
         this.statusCode = statusCode;
@@ -30,7 +30,7 @@ public class ResponseApi {
         this.data = data;
     }
 
-    public ResponseApi(int statusCode, String message, Object data, int total) {
+    public ResponseApi(int statusCode, String message, Object data, long total) {
         this.statusCode = statusCode;
         this.message = message;
         this.data = data;

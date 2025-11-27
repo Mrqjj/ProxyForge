@@ -1,6 +1,6 @@
 package com.proxy.forge.config;
 
-import com.proxy.forge.interceptor.GlobalInterceptor;
+import com.proxy.forge.interceptor.AdminInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -24,13 +24,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     @Autowired
-    private GlobalInterceptor globalInterceptor;
+    private AdminInterceptor globalInterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(globalInterceptor)
-                .addPathPatterns("/**") // intercept all requests
-//                .excludePathPatterns("") // You can exclude static resources or specific interfaces
+                .addPathPatterns("/pfadmin/**") // intercept all requests
+                .excludePathPatterns("/pfadmin/login") // You can exclude static resources or specific interfaces
                 ;
     }
 

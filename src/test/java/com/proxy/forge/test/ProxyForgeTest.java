@@ -25,10 +25,12 @@ public class ProxyForgeTest {
     @Autowired
     UserSerivce userSerivce;
 
+
     @Test
     public void test() {
         System.out.println("test");
     }
+
 
     @Test
     public void testUpdateUser() {
@@ -36,8 +38,6 @@ public class ProxyForgeTest {
         user.setId(1);
         user.setUserName("root");
         user.setPassWord("456");
-
         System.out.println(userSerivce.updateUserById(user));
-
     }
 }

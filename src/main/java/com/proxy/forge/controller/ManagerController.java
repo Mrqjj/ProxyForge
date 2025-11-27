@@ -1,10 +1,11 @@
 package com.proxy.forge.controller;
 
-import com.proxy.forge.api.pojo.DomainCertRequest;
-import com.proxy.forge.service.DomainCertificateService;
+import com.proxy.forge.api.pojo.*;
+import com.proxy.forge.service.*;
 import com.proxy.forge.tools.CertificateManagement;
 import com.proxy.forge.vo.ResponseApi;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,6 +30,21 @@ public class ManagerController {
 
     @Autowired
     DomainCertificateService domainCertificateService;
+    @Autowired
+    DomainService domainService;
+    @Autowired
+    UserSerivce userSerivce;
+    @Autowired
+    GlobalSettingService globalSettingService;
+    @Autowired
+    GlobalReplaceService globalInterceptorService;
+    @Autowired
+    private GlobalReplaceService globalReplaceService;
+
+    @RequestMapping(value = "/login")
+    Object login(@RequestBody @Validated UserLogin userLogin, HttpServletRequest request, HttpServletResponse response) {
+        return userSerivce.login(userLogin, request, response);
+    }
 
     /**
      * 处理证书请求的创建。
@@ -63,5 +79,95 @@ public class ManagerController {
     @RequestMapping(value = "/certcheck")
     Object createCertCheck(@RequestBody @Validated DomainCertRequest domainCertRequest, HttpServletRequest request, HttpServletRequest response) {
         return domainCertificateService.createCertificateChcekRequest(domainCertRequest.getToken());
+    }
+
+    /**
+     * 保存或更新域名信息。
+     *
+     * @param saveDomain 待保存的Domain对象，包含域名、状态等信息。
+     * @param request    服务器接收到的HTTP请求对象。
+     * @param response   服务器发送回客户端的HTTP响应对象。
+     * @return 返回一个表示操作结果的对象。如果返回值大于0，表示至少有一行被成功保存或更新；如果返回值为0，则表示没有找到匹配的记录或保存/更新操作未改变任何数据。
+     * @throws Exception 如果在保存过程中发生异常，则抛出此异常。
+     */
+    @RequestMapping(value = "/savedomain")
+    Object saveDomain(@RequestBody @Validated SaveDomain saveDomain, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        return domainService.saveDomain(saveDomain);
+    }
+
+    /**
+     * 获取域名列表。
+     *
+     * @param searchDomain 参数对象。
+     * @param requestr     服务器接收到的HTTP请求对象。
+     * @param response     服务器发送回客户端的HTTP响应对象。
+     * @return 返回表示域名列表或相关状态的对象。
+     */
+    @RequestMapping(value = "/domainlist")
+    Object domainList(@RequestBody @Validated SearchDomain searchDomain, HttpServletRequest requestr, HttpServletResponse response) {
+        return domainService.domainList(searchDomain);
+    }
+
+    /**
+     * 获取全局设置。
+     *
+     * @param request  服务器接收到的HTTP请求对象。
+     * @param response 服务器发送回客户端的HTTP响应对象。
+     * @return 返回表示全局设置的对象。
+     */
+    @RequestMapping(value = "/getSettings")
+    Object getGlobalSettings(HttpServletRequest request, HttpServletResponse response) {
+        return new ResponseApi(200, "获取成功", globalSettingService.getGlobalSetting());
+    }
+
+    /**
+     * 保存或更新全局设置。
+     *
+     * @param globalSettings 包含要保存的全局设置信息的对象。
+     * @param request        服务器接收到的HTTP请求对象。
+     * @param response       服务器发送回客户端的HTTP响应对象。
+     * @return 返回一个表示操作结果的对象。
+     */
+    @RequestMapping(value = "/saveSettings")
+    Object saveGlobalSettings(@RequestBody @Validated GlobalSettings globalSettings, HttpServletRequest request, HttpServletResponse response) {
+        return new ResponseApi(200, "操作成功", globalSettingService.saveGlobalSettings(globalSettings));
+    }
+
+    /**
+     * 获取全局替换配置。
+     *
+     * @param request  服务器接收到的HTTP请求对象。
+     * @param response 服务器发送回客户端的HTTP响应对象。
+     * @return 返回表示全局替换匹配内容数据列表。
+     */
+    @RequestMapping(value = "/globalReplace")
+    Object getGlobalReplace(HttpServletRequest request, HttpServletResponse response) {
+        return globalInterceptorService.getGlobalReplace(request, response);
+    }
+
+    /**
+     * 保存或更新全局替换配置。
+     *
+     * @param saveGlobalReplace 包含要保存的全局替换配置信息的对象。
+     * @param request            服务器接收到的HTTP请求对象。
+     * @param response           服务器发送回客户端的HTTP响应对象。
+     * @return 返回一个表示操作结果的对象。
+     */
+    @RequestMapping(value = "/saveGlobalReplace")
+    Object saveGlobalReplace(@RequestBody @Validated SaveGlobalReplace saveGlobalReplace, HttpServletRequest request,HttpServletResponse response){
+        return globalInterceptorService.saveGlobalReplace(saveGlobalReplace,request, response);
+    }
+
+    /**
+     * 删除指定的全局替换配置。
+     *
+     * @param deleteById 包含要删除的全局替换配置ID的信息对象。
+     * @param request    服务器接收到的HTTP请求对象。
+     * @param response   服务器发送回客户端的HTTP响应对象。
+     * @return 返回一个表示操作结果的对象。
+     */
+    @RequestMapping(value = "/delGlobalReplace")
+    Object deleteGlobalReplace(@RequestBody @Validated DeleteById deleteById,HttpServletRequest request,HttpServletResponse response){
+        return globalReplaceService.deleteGlobalReplace(deleteById);
     }
 }

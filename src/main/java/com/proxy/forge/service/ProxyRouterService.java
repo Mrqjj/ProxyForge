@@ -1,5 +1,6 @@
 package com.proxy.forge.service;
 
+import com.proxy.forge.api.pojo.CheckDeviceInfo;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
@@ -36,10 +37,22 @@ public interface ProxyRouterService {
      * 交给适当的处理者或服务机构。此方法专为需要处理大文件或持续数据流的场景设计，
      * 在代理或网关的服务架构中进行请求转发、处理和响应生成。
      *
-     * @param request 包含客户端数据的 Servlet 请求。
+     * @param request  包含客户端数据的 Servlet 请求。
      * @param response 输出的servlet响应用于将处理结果返回客户端。
      * @return 一个对象，封装了对请求处理的结果，具体类型取决于实现逻辑。
      * @throws Exception 如果在处理过程中发生错误，则抛出异常。
      */
     Object dispatchStream(HttpServletRequest request, HttpServletResponse response) throws Exception;
+
+    /**
+     * 检查接收的 HttpServletRequest 和 HttpServletResponse，并执行必要的验证或处理。
+     * 该方法可能用于在进一步处理请求之前进行预检查，确保请求的有效性或安全性。检查body体数据
+     *
+     * @param checkDeviceInfo 终端设备信息。
+     * @param request         包含客户端数据的 Servlet 请求。
+     * @param response        输出的servlet响应用于将处理结果返回客户端。
+     * @return 一个对象，表示检查的结果。具体类型和内容取决于实现逻辑。
+     * @throws Exception 如果在处理过程中发生错误，则抛出异常。
+     */
+    Object check(CheckDeviceInfo checkDeviceInfo, HttpServletRequest request, HttpServletResponse response);
 }

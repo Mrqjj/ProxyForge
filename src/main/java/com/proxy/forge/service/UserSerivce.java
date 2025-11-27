@@ -1,7 +1,11 @@
 package com.proxy.forge.service;
 
+import com.proxy.forge.api.pojo.UserLogin;
 import com.proxy.forge.dto.User;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.repository.query.Param;
+import org.springframework.http.ResponseEntity;
 
 /**
  *
@@ -33,4 +37,15 @@ public interface UserSerivce {
      * @return 返回一个整数值，表示初始化操作的结果。具体返回值的含义取决于实现逻辑。
      */
     int initUserData();
+
+    /**
+     * 处理用户登录请求。 statusCode = 200成功, 否则返回具体字段信息
+     *
+     * @param userLogin  提交参数
+     * @param request  包含客户端数据的 Servlet 请求，如用户名和密码等认证信息。
+     * @param response 输出的servlet响应，用于将处理结果返回给客户端，例如设置会话cookie或重定向。
+     * @return 返回一个ResponseEntity对象，表示已成功登录的用户信息。如果登录失败，则返回null。
+     */
+    ResponseEntity<?> login(UserLogin userLogin, HttpServletRequest request, HttpServletResponse response);
 }
+

@@ -1,20 +1,22 @@
 package com.proxy.forge.controller;
 
+import com.proxy.forge.api.pojo.CheckDeviceInfo;
 import com.proxy.forge.service.ProxyRouterService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 
@@ -34,8 +36,6 @@ import java.nio.charset.StandardCharsets;
 public class MasterController {
 
     @Autowired
-    private ResourceLoader resourceLoader;
-    @Autowired
     ProxyRouterService proxyRouterService;
     @Autowired
     StringRedisTemplate stringRedisTemplate;
@@ -49,50 +49,18 @@ public class MasterController {
      */
     @RequestMapping("/**")
     public Object proxyRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        String path = request.getRequestURI();
-        Resource resource = resourceLoader.getResource("classpath:/static" + (path.equals("/") ? "/index.html" : path));
-        if (resource.exists()) {
-            String fileName = resource.getFile().getName();
-            MediaType mediaType = switch (fileName.substring(fileName.lastIndexOf(".") + 1)) {
-                case "html" -> MediaType.TEXT_HTML;
-                case "css" -> MediaType.valueOf("text/css");
-                case "js" -> MediaType.valueOf("application/javascript");
-                case "json" -> MediaType.APPLICATION_JSON;
-                case "png" -> MediaType.IMAGE_PNG;
-                case "jpg", "jpeg" -> MediaType.IMAGE_JPEG;
-                case "gif" -> MediaType.IMAGE_GIF;
-                case "svg" -> MediaType.valueOf("image/svg+xml");
-                default -> MediaType.APPLICATION_OCTET_STREAM;
-            };
-            byte[] bytes = resource.getInputStream().readAllBytes();
-            if (fileName.equalsIgnoreCase("index.html")) {
-                String fileText = new String(bytes, StandardCharsets.UTF_8);
-                fileText = fileText.replaceAll("\\$\\{\\{errorUrl}}", "从配置读取跳转url");
-                fileText = fileText.replaceAll("<!--统计代码-->", "从配置读取统计代码");
-                bytes = fileText.getBytes(StandardCharsets.UTF_8);
-            }
-            // 插入检查失败跳转目标,读取配置
-            return ResponseEntity.ok()
-                    .contentType(mediaType)
-                    .body(bytes);
-        }
-        return "";
+        return proxyRouterService.dispatch(request, response);
     }
 
 
     @RequestMapping(value = "/check")
-    public Object check(HttpServletRequest request, HttpServletResponse response) {
-        return ResponseEntity.ok().body("check " + request.getProtocol());
+    public Object check(@RequestBody @Validated CheckDeviceInfo checkDeviceInfo, HttpServletRequest request, HttpServletResponse response) {
+        return proxyRouterService.check(checkDeviceInfo, request, response);
     }
 
     @RequestMapping(value = "/sr")
     public Object startRequest(HttpServletRequest request, HttpServletResponse response) {
         return ResponseEntity.ok().body("sr");
-    }
-
-    @RequestMapping(value = "/test")
-    public Object test(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        return proxyRouterService.dispatch(request, response);
     }
 
     /**
