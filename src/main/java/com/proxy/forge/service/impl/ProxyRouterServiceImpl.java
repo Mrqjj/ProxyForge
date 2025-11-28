@@ -1,6 +1,7 @@
 package com.proxy.forge.service.impl;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.google.common.net.InternetDomainName;
 import com.proxy.forge.api.pojo.CheckDeviceInfo;
 import com.proxy.forge.api.pojo.GlobalSettings;
 import com.proxy.forge.dto.GlobalReplace;
@@ -8,12 +9,15 @@ import com.proxy.forge.service.GlobalReplaceService;
 import com.proxy.forge.service.ProxyRouterService;
 import com.proxy.forge.tools.Base64Utils;
 import com.proxy.forge.tools.CryptoUtil;
+import com.proxy.forge.tools.GlobalStaticVariable;
 import com.proxy.forge.tools.HttpUtils;
+import com.proxy.forge.vo.ClientFingerprint;
 import com.proxy.forge.vo.ResponseApi;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +25,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -30,6 +35,8 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.HashMap;
+
+import static com.proxy.forge.tools.GlobalStaticVariable.REDIS_WEBSITE_CACHE_KEY;
 
 /**
  *
@@ -79,11 +86,8 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         //读取全局配置
         GlobalSettings globalSettings = JSONObject.parseObject(stringRedisTemplate.opsForValue().get("globalSettings"), GlobalSettings.class);
 
-
-
-        // 查找数据库是否有匹配的 代理网站列表
-
         String path = request.getRequestURI();
+        // 如果访问的文件 本地存在，则返回本地内容
         Resource resource = resourceLoader.getResource("classpath:/static" + (path.equals("/") ? "/index.html" : path));
         if (resource.exists()) {
             String fileName = resource.getFile().getName();
@@ -110,12 +114,27 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                     .body(bytes);
         }
 
-        // 客户端IP
-        String clientIp = request.getRemoteAddr();
         // 获取主机名.
         String serverName = request.getServerName();
+        // 查找数据库是否有匹配的 代理网站列表, 没有的话， 直接跳转走。状态是可用状态
+        String websiteConfig = stringRedisTemplate.opsForValue().get(REDIS_WEBSITE_CACHE_KEY + serverName);
+        if (StringUtils.isBlank(websiteConfig)) {
+            InternetDomainName idn = InternetDomainName.from(serverName);
+            if (idn.isUnderPublicSuffix()) {
+                websiteConfig = stringRedisTemplate.opsForValue().get(REDIS_WEBSITE_CACHE_KEY + "*." + idn.topPrivateDomain());
+            }
+        }
+        if (StringUtils.isBlank(websiteConfig)){
+            assert globalSettings != null;
+            ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)
+                    .header("Location", globalSettings.getDefaultUrl());
+        }
 
+        // 客户端IP
+        String clientIp = request.getRemoteAddr();
+        // 请求路径
         String uri = request.getRequestURI();
+        // 查询字符串
         String queryString = request.getQueryString();
 
         HashMap<String, Object> header = generateHader(request);
@@ -205,11 +224,13 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
      */
     @Override
     public Object check(CheckDeviceInfo checkDeviceInfo, HttpServletRequest request, HttpServletResponse response) {
-        // 获取环境信息
+        // 客户端ip
+        String remoteIP = request.getRemoteAddr();
+        // 主机名
+        String serverHost = request.getServerName();
+        // 客户浏览器环境信息
         String devInfo = checkDeviceInfo.getEncStr();
         byte[] originData = Base64Utils.decode(devInfo);
-        String remoteIP = request.getRemoteAddr();
-        String serverHost = request.getServerName();
 
         byte[] key = new byte[32];
         System.arraycopy(originData, originData.length - 48, key, 0, 32);
@@ -220,7 +241,7 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         try {
             byte[] result = CryptoUtil.aesCbcPkcs7Decrypt(key, iv, data);
             String str = new String(result);
-            JSONObject clientEnvInfo = JSONObject.parse(str);
+            ClientFingerprint clientFingerprint = JSONObject.parseObject(str, ClientFingerprint.class);
             // TODO:这里防红 待处理。
         } catch (Exception e) {
             log.info("[检查终端环境信息 实现]:  终端IP: [{}], 请求主机名: [{}], 解密终端数据错误.[{}]", remoteIP, serverHost, e.getMessage());

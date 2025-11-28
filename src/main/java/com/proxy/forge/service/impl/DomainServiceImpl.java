@@ -98,12 +98,12 @@ public class DomainServiceImpl implements DomainService {
         Specification<Domain> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // 1. keyword 模糊搜索 domain
+            // 1. keyword 模糊搜索
             if (searchDomain.getKeyWord() != null && !searchDomain.getKeyWord().isEmpty()) {
                 predicates.add(cb.like(root.get("domain"), "%" + searchDomain.getKeyWord() + "%"));
             }
 
-            // 2. status 等于查询
+            // 3. status 等于查询
             if (searchDomain.getStatus() != null && !searchDomain.getStatus().isEmpty()) {
                 predicates.add(cb.equal(root.get("status"), searchDomain.getStatus()));
             }
@@ -112,5 +112,27 @@ public class DomainServiceImpl implements DomainService {
         };
         List<Domain> domains = domainRepository.findAll(spec, pageable).getContent();
         return new ResponseApi(200, "获取成功.", domains, domainRepository.count());
+    }
+
+    /**
+     * 获取所有域名信息。
+     *
+     * @return 返回一个对象，表示获取到的所有域名信息。当前实现中返回null，具体返回类型和内容取决于实现逻辑。
+     */
+    @Override
+    public Object domainAll() {
+        List<Domain> domains = domainRepository.findAll();
+        return new ResponseApi(200, "成功", domains);
+    }
+
+    /**
+     * 查询可用的域名列表。
+     *
+     * @return 返回一个ResponseApi对象，其中包含状态码、提示信息以及可用的域名列表数据。状态码为200表示请求成功，提示信息为"成功"，data字段包含可用的Domain对象列表。
+     */
+    @Override
+    public Object availableDomains() {
+        List<Domain> domains = domainRepository.queryAvailableDomains();
+        return new ResponseApi(200, "成功", domains);
     }
 }

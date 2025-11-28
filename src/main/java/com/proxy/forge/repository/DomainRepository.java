@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  *
  * <p>ProjectName: proxy-forge</p>
@@ -53,4 +55,11 @@ public interface DomainRepository extends JpaRepository<Domain, Integer> , JpaSp
             "where d.id=:#{#domain.id}")
     int updateDomainById(@Param("domain") Domain domain);
 
+    /**
+     * 查询所有未被任何网站使用的可用域名。
+     *
+     * @return 返回一个包含所有未与任何WebSite关联的Domain对象的列表
+     */
+    @Query("select d from Domain d where d.domain not in (select web.domain from WebSite web)")
+    List<Domain> queryAvailableDomains();
 }

@@ -1,7 +1,7 @@
 package com.proxy.forge.api.pojo;
 
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 /**
@@ -17,8 +17,8 @@ import lombok.Data;
  * @Date: 2025-11-27 18:06
  **/
 @Data
-public class DeleteById {
+public class QueryById {
 
     @Min(value = 1)
-    private int id;
+    private Integer id;
 }

@@ -44,6 +44,7 @@ public class GlobalSettingServiceImpl implements GlobalSettingService {
         globalSettings.setRenewDays(10);
         globalSettings.setDefaultUrl("https://www.google.com");
         stringRedisTemplate.opsForValue().set("globalSettings", JSON.toJSONString(globalSettings));
+        log.info("[初始化全局配置]   初始化完毕.");
         return true;
     }
 

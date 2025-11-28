@@ -39,7 +39,10 @@ public class ManagerController {
     @Autowired
     GlobalReplaceService globalInterceptorService;
     @Autowired
-    private GlobalReplaceService globalReplaceService;
+    GlobalReplaceService globalReplaceService;
+    @Autowired
+    WebSiteService websiteService;
+
 
     @RequestMapping(value = "/login")
     Object login(@RequestBody @Validated UserLogin userLogin, HttpServletRequest request, HttpServletResponse response) {
@@ -109,6 +112,19 @@ public class ManagerController {
     }
 
     /**
+     * 获取所有域名信息。
+     *
+     * @param request  服务器接收到的HTTP请求对象。
+     * @param response 服务器发送回客户端的HTTP响应对象。
+     * @return 返回表示所有域名信息或相关状态的对象。
+     */
+    @RequestMapping(value = "/domainAll")
+    Object domainAll(HttpServletRequest request, HttpServletResponse response) {
+        return domainService.domainAll();
+    }
+
+
+    /**
      * 获取全局设置。
      *
      * @param request  服务器接收到的HTTP请求对象。
@@ -149,13 +165,13 @@ public class ManagerController {
      * 保存或更新全局替换配置。
      *
      * @param saveGlobalReplace 包含要保存的全局替换配置信息的对象。
-     * @param request            服务器接收到的HTTP请求对象。
-     * @param response           服务器发送回客户端的HTTP响应对象。
+     * @param request           服务器接收到的HTTP请求对象。
+     * @param response          服务器发送回客户端的HTTP响应对象。
      * @return 返回一个表示操作结果的对象。
      */
     @RequestMapping(value = "/saveGlobalReplace")
-    Object saveGlobalReplace(@RequestBody @Validated SaveGlobalReplace saveGlobalReplace, HttpServletRequest request,HttpServletResponse response){
-        return globalInterceptorService.saveGlobalReplace(saveGlobalReplace,request, response);
+    Object saveGlobalReplace(@RequestBody @Validated SaveGlobalReplace saveGlobalReplace, HttpServletRequest request, HttpServletResponse response) {
+        return globalInterceptorService.saveGlobalReplace(saveGlobalReplace, request, response);
     }
 
     /**
@@ -167,7 +183,66 @@ public class ManagerController {
      * @return 返回一个表示操作结果的对象。
      */
     @RequestMapping(value = "/delGlobalReplace")
-    Object deleteGlobalReplace(@RequestBody @Validated DeleteById deleteById,HttpServletRequest request,HttpServletResponse response){
+    Object deleteGlobalReplace(@RequestBody @Validated QueryById deleteById, HttpServletRequest request, HttpServletResponse response) {
         return globalReplaceService.deleteGlobalReplace(deleteById);
+    }
+
+    /**
+     * 获取可用的域名列表。
+     *
+     * @param request  服务器接收到的HTTP请求对象。
+     * @param response 服务器发送回客户端的HTTP响应对象。
+     * @return 返回表示可用域名列表或相关状态的对象。
+     */
+    @RequestMapping(value = "/availableDomains")
+    Object availableDomains(HttpServletRequest request, HttpServletResponse response) {
+        return domainService.availableDomains();
+    }
+
+
+    /**
+     * 保存或更新网站信息。
+     *
+     * @param saveWebSite 包含要保存的网站信息的对象。
+     * @param request     服务器接收到的HTTP请求对象。
+     * @param response    服务器发送回客户端的HTTP响应对象。
+     * @return 返回一个表示操作结果的对象。
+     */
+    @RequestMapping(value = "/saveSite")
+    Object saveWebSite(@RequestBody @Validated SaveWebSite saveWebSite, HttpServletRequest request, HttpServletResponse response) {
+        return websiteService.save(saveWebSite);
+    }
+
+    /**
+     * 获取站点列表。
+     *
+     * @param searchWebSite 用于搜索站点的参数，包括关键词、域名筛选条件、状态筛选条件、页码及每页数量等信息
+     * @param request       包含客户端数据的 Servlet 请求
+     * @param response      输出的servlet响应，用于将处理结果返回给客户端
+     * @return 返回一个对象，表示查询到的站点列表。具体返回对象的类型和结构取决于实现逻辑
+     */
+    @RequestMapping(value = "/webSiteList")
+    Object webSiteList(@RequestBody @Validated SearchWebSite searchWebSite, HttpServletRequest request, HttpServletResponse response) {
+        return websiteService.webSiteList(searchWebSite, request, response);
+    }
+
+    /**
+     * 检索特定网站的详细信息。
+     *
+     * @param query    包含网站ID的查询对象，用于获取详细信息。该对象应为有效对象而非空对象。
+     * @param request  HttpServletRequest 对象，可用于获取客户端请求的信息。
+     * @param response HttpServletResponse 对象，可用于向客户端发送响应。
+     * @return 代表网站详细信息的对象。该对象的具体类型和结构取决于“websiteService.webSiteDetail”的实现方式方法。
+     *
+     */
+    @RequestMapping(value = "/webSiteDetail")
+    Object webSiteDetail(@RequestBody @Validated QueryById query, HttpServletRequest request, HttpServletResponse response) {
+        return websiteService.webSiteDetail(query);
+    }
+
+
+    @RequestMapping(value = "delWebSite")
+    Object deleteWebSite(@RequestBody @Validated QueryById query, HttpServletRequest request, HttpServletResponse response) {
+        return websiteService.deleteWebSite(query);
     }
 }

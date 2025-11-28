@@ -33,4 +33,19 @@ public interface DomainService {
      * @return 返回包含域名信息的对象。具体返回对象的类型和结构取决于实现逻辑。
      */
     Object domainList(SearchDomain searchDomain);
+
+    /**
+     * 获取所有域名的信息。
+     *
+     * @return 返回一个包含所有域名信息的对象。具体返回对象的类型和结构取决于实现逻辑。
+     */
+    Object domainAll();
+
+    /**
+     * 获取可用的域名列表。
+     *
+     * @return 返回一个包含可用域名信息的对象。具体返回对象的类型和结构取决于实现逻辑。
+     */
+    Object availableDomains();
+
 }

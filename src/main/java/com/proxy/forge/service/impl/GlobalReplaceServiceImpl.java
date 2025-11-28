@@ -1,6 +1,6 @@
 package com.proxy.forge.service.impl;
 
-import com.proxy.forge.api.pojo.DeleteById;
+import com.proxy.forge.api.pojo.QueryById;
 import com.proxy.forge.api.pojo.SaveGlobalReplace;
 import com.proxy.forge.dto.GlobalReplace;
 import com.proxy.forge.repository.GlobalReplaceRepository;
@@ -389,7 +389,7 @@ public class GlobalReplaceServiceImpl implements GlobalReplaceService {
      * @return 一个表示删除作结果的对象，可以是确认、状态或受影响的记录计数。
      */
     @Override
-    public Object deleteGlobalReplace(DeleteById deleteById) {
+    public Object deleteGlobalReplace(QueryById deleteById) {
         globalReplaceRepository.deleteById(deleteById.getId());
         return new ResponseApi(200, "成功", null);
     }

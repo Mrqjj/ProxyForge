@@ -1,6 +1,6 @@
 package com.proxy.forge.service;
 
-import com.proxy.forge.api.pojo.DeleteById;
+import com.proxy.forge.api.pojo.QueryById;
 import com.proxy.forge.api.pojo.SaveGlobalReplace;
 import com.proxy.forge.dto.GlobalReplace;
 import jakarta.servlet.http.HttpServletRequest;
@@ -60,5 +60,5 @@ public interface GlobalReplaceService {
      * @param deleteById 包含要删除的全局替换配置ID的信息对象。
      * @return 返回一个表示操作结果的对象，具体类型和内容取决于实现逻辑。
      */
-    Object deleteGlobalReplace(DeleteById deleteById);
+    Object deleteGlobalReplace(QueryById deleteById);
 }
