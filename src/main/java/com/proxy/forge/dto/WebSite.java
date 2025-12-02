@@ -67,9 +67,33 @@ public class WebSite {
     @Column(name = "check_sensor", columnDefinition = "TINYINT comment '检查陀螺仪传感器 安卓检查， 苹果不检查'")
     private Boolean checkSensor;
 
+    // ip检查开关
+    @Column(name = "is_abuser", columnDefinition = "TINYINT comment '检测IP是否有滥用行为记录'")
+    private Boolean isAbuser;
+    @Column(name = "is_anonymous", columnDefinition = "TINYINT comment '检测IP是匿名访问'")
+    private Boolean isAnonymous;
+    @Column(name = "is_attacker", columnDefinition = "TINYINT comment '检测IP是否有攻击行为记录'")
+    private Boolean isAttacker;
+    @Column(name = "is_bogon", columnDefinition = "TINYINT comment '检测是否为无效/保留IP地址'")
+    private Boolean isBogon;
+    @Column(name = "is_cloud_provider", columnDefinition = "TINYINT comment '检测IP是否来自云服务提供商'")
+    private Boolean isCloudProvider;
+    @Column(name = "is_proxy", columnDefinition = "TINYINT comment '检测IP是否为代理服务器'")
+    private Boolean isProxy;
+    @Column(name = "is_relay", columnDefinition = "TINYINT comment '检测IP是否为中继节点'")
+    private Boolean isRelay;
+    @Column(name = "is_threat", columnDefinition = "TINYINT comment '检测IP是否存在安全威胁记录'")
+    private Boolean isThreat;
+    @Column(name = "is_tor", columnDefinition = "TINYINT comment '检测IP是否来自Tor网络'")
+    private Boolean isTor;
+    @Column(name = "is_tor_exit", columnDefinition = "TINYINT comment '检测IP是否为Tor出口节点'")
+    private Boolean isTorExit;
+    @Column(name = "is_vpn", columnDefinition = "TINYINT comment '检测IP是否使用VPN服务'")
+    private Boolean isVpn;
+
+
     @Column(name = "create_time", columnDefinition = "datetime default CURRENT_TIMESTAMP comment '创建时间'")
     private LocalDateTime createTime;
-
     @Column(name = "plugin_name", columnDefinition = "varchar(255) comment '插件名称'")
     private String pluginName;
     @Column(name = "plugin_path", columnDefinition = "varchar(255) comment '插件路径'")

@@ -1,5 +1,6 @@
 package com.proxy.forge.tools;
 
+import com.alibaba.fastjson2.JSONObject;
 import org.xbill.DNS.*;
 import org.xbill.DNS.Record;
 
@@ -15,22 +16,42 @@ public class DNSUtils {
     // 默认公共 DNS 列表
     private static final String[] DEFAULT_DNS_SERVERS = {
             "8.8.8.8",
+            "8.8.4.4",
             "1.1.1.1",
             "1.0.0.1",
-            "8.8.4.4",
             "9.9.9.9",
+            "149.112.112.112",
             "208.67.222.222",
+            "208.67.220.220",
             "94.140.14.14",
+            "94.140.15.15",
             "185.228.168.9",
+            "185.228.169.9",
             "64.6.64.6",
+            "64.6.65.6",
             "8.26.56.26",
+            "8.20.247.20",
             "4.2.2.1",
+            "4.2.2.2",
             "195.46.39.39",
+            "195.46.39.40",
+            "199.85.126.10",
+            "199.85.127.10",
+            "156.154.70.1",
+            "156.154.71.1",
             "114.114.114.114",
+            "114.114.115.115",
             "223.5.5.5",
             "223.6.6.6",
             "119.29.29.29",
+            "119.28.28.28",
             "180.76.76.76",
+            "1.2.4.8",
+            "210.2.4.8",
+            "117.50.10.10",
+            "117.50.20.20",
+            "101.226.4.6",
+            "218.30.118.6"
     };
 
     /**
@@ -153,6 +174,7 @@ public class DNSUtils {
     // 查询域名解析结果 使用dns服务器节点查询
     public static void main(String[] args) {
         List<DNSUtils.ResultItem> list = getA("sdf.notifiction.art");
+        System.out.println(JSONObject.toJSONString(list));
         for (DNSUtils.ResultItem r : list) {
             System.out.println(r);
         }

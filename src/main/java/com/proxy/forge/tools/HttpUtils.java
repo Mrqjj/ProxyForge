@@ -184,7 +184,7 @@ public class HttpUtils {
      * @param proxy
      * @return
      */
-    public static JSONObject sendHeadRequest(String url, Map<String, String> headerMap, String proxy, boolean allowRedirects) throws Exception {
+    public static HttpResponse sendHeadRequest(String url, Map<String, String> headerMap, String proxy, boolean allowRedirects) throws Exception {
         if (StringUtils.isNotBlank(proxy) && !proxy.startsWith("socks5://") && !proxy.startsWith("http://")) {
             throw new ParseException("Invalid proxy: " + proxy + "; 只支持 http 或 socks5 类型代理.");
         }
@@ -225,7 +225,7 @@ public class HttpUtils {
      * @return 返回响应头标识
      * @throws Exception 抛出异常
      */
-    public static JSONObject sendHeadRequest(String url, Map<String, String> headerMap, Map<String, Object> dnsMap, String proxyHost, int proxyPort, String proxyUserName, String proxyPassword, boolean allowRedirects) throws Exception {
+    public static HttpResponse sendHeadRequest(String url, Map<String, String> headerMap, Map<String, Object> dnsMap, String proxyHost, int proxyPort, String proxyUserName, String proxyPassword, boolean allowRedirects) throws Exception {
         HttpHead httpHead = new HttpHead(url);
         if (headerMap != null) {
             // 写入headers
@@ -248,17 +248,11 @@ public class HttpUtils {
             httpClient = getSslHttpClient(new URL(url).getHost(), targetServerIP, proxyHost, proxyPort, proxyUserName, proxyPassword, null, null);
             HttpClientContext context = HttpClientContext.create();
             response = httpClient.execute(httpHead, context);
-
-            JSONObject jsonObject = new JSONObject();
-            for (Header header : response.getAllHeaders()) {
-                jsonObject.put(header.getName(), header.getValue());
-            }
-            return jsonObject;
+            return response;
         } catch (IOException ignored) {
-            ignored.printStackTrace();
             logger.info(String.format("发送HEAD请求:[%s], 出现异常IOException, 异常信息:[%s]", url, ignored.getMessage()));
+            throw  ignored;
         }
-        return null;
     }
 
 

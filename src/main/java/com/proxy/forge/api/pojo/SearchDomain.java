@@ -1,5 +1,6 @@
 package com.proxy.forge.api.pojo;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
@@ -22,8 +23,8 @@ public class SearchDomain {
     private String keyWord;
 
     private String status;
-
+    @Min(value = 1)
     private int pageNum;
-
+    @Min(value = 1)
     private int pageSize;
 }

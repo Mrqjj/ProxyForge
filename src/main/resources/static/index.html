@@ -47,7 +47,8 @@
                         body: JSON.stringify({encStr: enc}),
                         headers: {
                             "Content-Type": "application/json"
-                        }
+                        },
+                        credentials: "include"
                     })
                     const data = await response.json();
                     if (data.statusCode === 200) {

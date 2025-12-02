@@ -1,7 +1,10 @@
 package com.proxy.forge.test;
 
+import com.alibaba.fastjson2.JSONObject;
 import com.proxy.forge.dto.User;
+import com.proxy.forge.service.IpInfoService;
 import com.proxy.forge.service.UserSerivce;
+import com.proxy.forge.vo.ipinfo.ClientIpInfo;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,7 +27,8 @@ public class ProxyForgeTest {
 
     @Autowired
     UserSerivce userSerivce;
-
+    @Autowired
+    IpInfoService ipInfoService;
 
     @Test
     public void test() {
@@ -40,4 +44,5 @@ public class ProxyForgeTest {
         user.setPassWord("456");
         System.out.println(userSerivce.updateUserById(user));
     }
+
 }

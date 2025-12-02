@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserSerivce {
         log.info("用户表是否需要初始化: {}", userCount == 0);
         if (userCount == 0) {
             String adminUserName = "admin";
-            String adminUserPass = RandomStringUtils.random(12,true,false);
+            String adminUserPass = RandomStringUtils.random(12, true, false);
             log.info("初始化管理员账号: {}, 密码: {}", adminUserName, adminUserPass);
             User u = new User();
             u.setUserName(adminUserName);
@@ -86,10 +86,10 @@ public class UserServiceImpl implements UserSerivce {
         if (resUser != null) {
             //登录成功
             JSONObject jsonObject = new JSONObject();
-            jsonObject.put("token", JwtUtils.createToken(JSONObject.toJSONString(resUser)));
             JSONObject userInfoObj = new JSONObject();
             userInfoObj.put("userName", resUser.getUserName());
             userInfoObj.put("expiredTime", resUser.getExpiredTime());
+            jsonObject.put("token", JwtUtils.createToken(userInfoObj.toJSONString()));
             jsonObject.put("userInfo", userInfoObj);
             return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON)
                     .body(new ResponseApi(200, "登录成功", jsonObject));

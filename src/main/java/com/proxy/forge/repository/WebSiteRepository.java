@@ -31,7 +31,7 @@ public interface WebSiteRepository extends JpaRepository<WebSite,Integer>, JpaSp
      * @param webSite 包含名称和目标URL的网站对象，用于搜索
      * @return 与所提供名称或目标URL匹配的网站，若未匹配则为空
      */
-    @Query(value = "select web from WebSite web where web.name=:#{#webSite.name} or web.targetUrl=:#{#webSite.targetUrl}")
+    @Query(value = "select web from WebSite web where web.name=:#{#webSite.name} or web.domain=:#{#webSite.domain} or web.targetUrl=:#{#webSite.targetUrl}")
     WebSite queryWebSiteByNameOrTargetUrl(@Param("webSite") WebSite webSite);
 
 
@@ -51,6 +51,17 @@ public interface WebSiteRepository extends JpaRepository<WebSite,Integer>, JpaSp
             "web.checkPlatform=COALESCE(:#{#webSite.checkPlatform},web.checkPlatform)," +
             "web.checkAutomation=COALESCE(:#{#webSite.checkAutomation},web.checkAutomation)," +
             "web.checkSensor=COALESCE(:#{#webSite.checkSensor},web.checkSensor)," +
+            "web.isAbuser=COALESCE(:#{#webSite.isAbuser},web.isAbuser)," +
+            "web.isAnonymous=COALESCE(:#{#webSite.isAnonymous},web.isAnonymous)," +
+            "web.isAttacker=COALESCE(:#{#webSite.isAttacker},web.isAttacker)," +
+            "web.isBogon=COALESCE(:#{#webSite.isBogon},web.isBogon)," +
+            "web.isCloudProvider=COALESCE(:#{#webSite.isCloudProvider},web.isCloudProvider)," +
+            "web.isProxy=COALESCE(:#{#webSite.isProxy},web.isProxy)," +
+            "web.isRelay=COALESCE(:#{#webSite.isRelay},web.isRelay)," +
+            "web.isThreat=COALESCE(:#{#webSite.isThreat},web.isThreat)," +
+            "web.isTor=COALESCE(:#{#webSite.isTor},web.isTor)," +
+            "web.isTorExit=COALESCE(:#{#webSite.isTorExit},web.isTorExit)," +
+            "web.isVpn=COALESCE(:#{#webSite.isVpn},web.isVpn)," +
             "web.createTime=COALESCE(:#{#webSite.createTime},web.createTime)," +
             "web.pluginName=COALESCE(:#{#webSite.pluginName},web.pluginName)," +
             "web.pluginPath=COALESCE(:#{#webSite.pluginPath},web.pluginPath)," +

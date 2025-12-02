@@ -3,20 +3,22 @@ package com.proxy.forge.service.impl;
 import com.alibaba.fastjson2.JSONObject;
 import com.google.common.net.InternetDomainName;
 import com.proxy.forge.api.pojo.CheckDeviceInfo;
+import com.proxy.forge.api.pojo.FingerprintAnalysisReuslt;
 import com.proxy.forge.api.pojo.GlobalSettings;
 import com.proxy.forge.dto.GlobalReplace;
+import com.proxy.forge.dto.WebSite;
 import com.proxy.forge.service.GlobalReplaceService;
 import com.proxy.forge.service.ProxyRouterService;
-import com.proxy.forge.tools.Base64Utils;
-import com.proxy.forge.tools.CryptoUtil;
-import com.proxy.forge.tools.GlobalStaticVariable;
-import com.proxy.forge.tools.HttpUtils;
-import com.proxy.forge.vo.ClientFingerprint;
+import com.proxy.forge.service.WhiteListService;
+import com.proxy.forge.tools.*;
+import com.proxy.forge.vo.fingerprint.ClientFingerprint;
 import com.proxy.forge.vo.ResponseApi;
 import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
@@ -25,7 +27,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.UUID;
 
 import static com.proxy.forge.tools.GlobalStaticVariable.REDIS_WEBSITE_CACHE_KEY;
 
@@ -62,6 +64,96 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
     GlobalReplaceService globalReplaceService;
     @Autowired
     StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    FingerprintAnalysisUtil fingerprintAnalysisUtil;
+    @Autowired
+    WhiteListService whiteListService;
+
+    /**
+     * 检查传入的 HttpServletRequest 和 HttpServletResponse，并执行必要的验证或处理。
+     * 该方法可以用于执行预处理步骤，例如身份验证、权限检查或其他形式的请求验证，
+     * 以确保请求满足特定条件后才能被进一步处理。
+     *
+     * @param tk              token
+     * @param checkDeviceInfo 终端设备信息
+     * @param request         包含客户端数据的 Servlet 请求。
+     * @param response        输出的servlet响应用于将处理结果返回客户端。
+     * @return 一个对象，封装了对请求处理的结果。具体类型和内容取决于实现逻辑。
+     */
+    @Override
+    public Object check(String tk, CheckDeviceInfo checkDeviceInfo, HttpServletRequest request, HttpServletResponse response) {
+        // 客户端ip
+        String clientIp = request.getRemoteAddr();
+        // 主机名
+        String serverName = request.getServerName();
+        // 客户浏览器环境信息
+        String devInfo = checkDeviceInfo.getEncStr();
+        try {
+            byte[] originData = Base64Utils.decode(devInfo);
+            byte[] key = new byte[32];
+            System.arraycopy(originData, originData.length - 48, key, 0, 32);
+            byte[] iv = new byte[16];
+            System.arraycopy(originData, originData.length - 16, iv, 0, 16);
+            byte[] data = new byte[originData.length - 48];
+            System.arraycopy(originData, 0, data, 0, originData.length - 48);
+            byte[] result = CryptoUtil.aesCbcPkcs7Decrypt(key, iv, data);
+            String str = new String(result);
+            ClientFingerprint clientFingerprint = JSONObject.parseObject(str, ClientFingerprint.class);
+            // TODO:这里防红。
+            // 白名单IP 直接放行不做策略检查
+            if (!whiteListService.isExistsWhiteList(clientIp)) {
+                // 需要准备终端的环境信息， 还有代理信息以及, 该域名的配置信息
+                // 读取全局配置
+                GlobalSettings globalSettings = JSONObject.parseObject(stringRedisTemplate.opsForValue().get("globalSettings"), GlobalSettings.class);
+                FingerprintAnalysisReuslt fingerprintAnalysisReuslt = fingerprintAnalysisUtil.analyze(serverName, clientFingerprint, clientIp, globalSettings);
+                if (!fingerprintAnalysisReuslt.isResult()) {
+                    log.info("[终端检查 策略不通过] , 拒绝执行. 终端IP: [{}], 主机名: [{}], 策略: {}", clientIp, serverName, fingerprintAnalysisReuslt.getMessage());
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseApi(403, "error", "Strategy check failed!"));
+                }
+            } else {
+                log.info("[终端检查] , 终端IP: [{}], 主机名: [{}], 存在白名单,不拦截", clientIp, serverName);
+            }
+            // 分配数据, 终端唯一标识.
+            if (StringUtils.isBlank(tk) || JwtUtils.isExpired(tk)) {
+                String uuid = UUID.randomUUID().toString().replaceAll("-", "") + System.currentTimeMillis();
+                String jt = JwtUtils.createToken(DigestUtils.md5Hex(uuid), 1000 * 60 * 60 * 24 * 3, null); // 数据有效期 3天
+                Cookie uniqueIdent = new Cookie("tk", jt);
+                uniqueIdent.setMaxAge(60 * 60 * 24 * 365);  // cookie 过期时间 一年
+                response.addCookie(uniqueIdent);
+            }
+            return ResponseEntity.ok().body(new ResponseApi(200, "success", null));
+        } catch (Exception e) {
+            log.info("[检查终端环境信息 实现]:  终端IP: [{}], 请求主机名: [{}], 解密终端数据错误.[{}]", clientIp, serverName, e.getMessage());
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseApi(403, "error", "data error"));
+        }
+    }
+
+    /**
+     * 这里校验客户端的标识， 组装数据。 发送请求。
+     *
+     * @param tk       客户端唯一标识，用于验证或识别客户端。
+     * @param request  包含客户端数据的Servlet请求对象。
+     * @param response 用于将处理结果返回给客户端的ServletResponse对象。
+     * @return 结果。
+     */
+    @Override
+    public Object startRequest(String tk, HttpServletRequest request, HttpServletResponse response) {
+        // 没有获取到有效的终端标识, 回到主流程, 重新开始.
+        if (StringUtils.isBlank(tk) || JwtUtils.isExpired(tk)) {
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", "/").build();
+        }
+        // 获取主机名.
+        String serverName = request.getServerName();
+        // 客户端IP
+        String clientIp = request.getRemoteAddr();
+
+
+        // 这里应该 回调插件。插件如果没有处理目标url  就读取站点配置的目标url进行请求。
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header("Location", "/index")
+                .build();
+    }
 
     /**
      * 处理接收的 HttpServletRequest 和 HttpServletResponse，并发送
@@ -69,24 +161,34 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
      * 请求转发、处理和响应生成，在代理或网关中进行
      * 服务架构。
      *
+     * @param tk       客户端唯一标识。
      * @param request  包含客户端数据的 Servlet 请求。
      * @param response 输出的servlet响应用于将处理结果返回客户端。
      * @return 一个ResponseEntity对象，封装了响应体和状态码，头部，以及 HTTP 响应所需的其他元数据。
      *
      */
     @Override
-    public Object dispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public Object dispatch(String tk, HttpServletRequest request, HttpServletResponse response) throws Exception {
         //先查询是否有路径匹配的替换
         GlobalReplace globalReplace = globalReplaceService.getGlobalReplace(request.getRequestURI());
         if (globalReplace != null) {
             return ResponseEntity.ok().contentType(MediaType.valueOf(globalReplace.getContentType()))
                     .body(globalReplace.getResponseContent());
         }
+        // 没有获取到有效的终端标识, 回到主流程, 重新开始.
+        if (StringUtils.isBlank(tk) || JwtUtils.isExpired(tk)) {
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", "/").build();
+        }
 
         //读取全局配置
         GlobalSettings globalSettings = JSONObject.parseObject(stringRedisTemplate.opsForValue().get("globalSettings"), GlobalSettings.class);
-
+        //请求路径
         String path = request.getRequestURI();
+        // 请求路径
+        String uri = request.getRequestURI();
+        // 查询字符串
+        String queryString = request.getQueryString();
         // 如果访问的文件 本地存在，则返回本地内容
         Resource resource = resourceLoader.getResource("classpath:/static" + (path.equals("/") ? "/index.html" : path));
         if (resource.exists()) {
@@ -113,10 +215,13 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                     .contentType(mediaType)
                     .body(bytes);
         }
-
         // 获取主机名.
         String serverName = request.getServerName();
-        // 查找数据库是否有匹配的 代理网站列表, 没有的话， 直接跳转走。状态是可用状态
+        // 客户端IP
+        String clientIp = request.getRemoteAddr();
+
+
+        // 读取web配置
         String websiteConfig = stringRedisTemplate.opsForValue().get(REDIS_WEBSITE_CACHE_KEY + serverName);
         if (StringUtils.isBlank(websiteConfig)) {
             InternetDomainName idn = InternetDomainName.from(serverName);
@@ -124,18 +229,14 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                 websiteConfig = stringRedisTemplate.opsForValue().get(REDIS_WEBSITE_CACHE_KEY + "*." + idn.topPrivateDomain());
             }
         }
-        if (StringUtils.isBlank(websiteConfig)){
-            assert globalSettings != null;
-            ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY)
-                    .header("Location", globalSettings.getDefaultUrl());
+        if (StringUtils.isBlank(websiteConfig)) {
+            log.info("[获取站点配置]:  终端IP: [{}], 请求主机名: [{}]", clientIp, serverName);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseApi(403, "error", "data error"));
         }
 
-        // 客户端IP
-        String clientIp = request.getRemoteAddr();
-        // 请求路径
-        String uri = request.getRequestURI();
-        // 查询字符串
-        String queryString = request.getQueryString();
+        // 读取站点的配置文件
+        WebSite webSite = JSONObject.parseObject(websiteConfig, WebSite.class);
+
 
         HashMap<String, Object> header = generateHader(request);
         if (request.getMethod().equalsIgnoreCase("POST")) {
@@ -210,43 +311,5 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
             response.setHeader(h.getName(), h.getValue());
         }
         response.setStatus(httpResponse.getStatusLine().getStatusCode());
-    }
-
-    /**
-     * 检查传入的 HttpServletRequest 和 HttpServletResponse，并执行必要的验证或处理。
-     * 该方法可以用于执行预处理步骤，例如身份验证、权限检查或其他形式的请求验证，
-     * 以确保请求满足特定条件后才能被进一步处理。
-     *
-     * @param checkDeviceInfo 终端设备信息
-     * @param request         包含客户端数据的 Servlet 请求。
-     * @param response        输出的servlet响应用于将处理结果返回客户端。
-     * @return 一个对象，封装了对请求处理的结果。具体类型和内容取决于实现逻辑。
-     */
-    @Override
-    public Object check(CheckDeviceInfo checkDeviceInfo, HttpServletRequest request, HttpServletResponse response) {
-        // 客户端ip
-        String remoteIP = request.getRemoteAddr();
-        // 主机名
-        String serverHost = request.getServerName();
-        // 客户浏览器环境信息
-        String devInfo = checkDeviceInfo.getEncStr();
-        byte[] originData = Base64Utils.decode(devInfo);
-
-        byte[] key = new byte[32];
-        System.arraycopy(originData, originData.length - 48, key, 0, 32);
-        byte[] iv = new byte[16];
-        System.arraycopy(originData, originData.length - 16, iv, 0, 16);
-        byte[] data = new byte[originData.length - 48];
-        System.arraycopy(originData, 0, data, 0, originData.length - 48);
-        try {
-            byte[] result = CryptoUtil.aesCbcPkcs7Decrypt(key, iv, data);
-            String str = new String(result);
-            ClientFingerprint clientFingerprint = JSONObject.parseObject(str, ClientFingerprint.class);
-            // TODO:这里防红 待处理。
-        } catch (Exception e) {
-            log.info("[检查终端环境信息 实现]:  终端IP: [{}], 请求主机名: [{}], 解密终端数据错误.[{}]", remoteIP, serverHost, e.getMessage());
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseApi(403, "error", "data error"));
-        }
-        return null;
     }
 }

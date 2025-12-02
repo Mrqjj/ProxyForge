@@ -3,6 +3,7 @@ package com.proxy.forge.api.pojo;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
@@ -32,22 +33,55 @@ public class SaveWebSite {
     private String status;        // 状态: running/stopped/maintenance
 
     // 访问策略
+    @NotNull(message = "allowMobile 不能为空")
     private Boolean allowPc;  //允许pc端访问
 
+    @NotNull(message = "allowMobile 不能为空")
     private Boolean allowMobile;
-
+    @NotNull(message = "allowMobile 不能为空")
     private Boolean allowAndroid;
-
+    @NotNull(message = "allowMobile 不能为空")
     private Boolean allowIos;
 
     private String allowCountries; // 国家代码，逗号分隔，如 "CN,US,JP"
 
     // 移动端检测
+    @NotNull(message = "allowMobile 不能为空")
     private Boolean checkBatteryCharging;
+    @NotNull(message = "allowMobile 不能为空")
     private Boolean checkGpu;
+    @NotNull(message = "allowMobile 不能为空")
     private Boolean checkPlatform;
+    @NotNull(message = "allowMobile 不能为空")
     private Boolean checkAutomation;
+    @NotNull(message = "allowMobile 不能为空")
     private Boolean checkSensor;
+
+    // ip检测
+    @NotNull(message = "allowMobile 不能为空")
+    private Boolean isAbuser;
+    @NotNull(message = "allowMobile 不能为空")
+    private Boolean isAnonymous;
+    @NotNull(message = "allowMobile 不能为空")
+    private Boolean isAttacker;
+    @NotNull(message = "allowMobile 不能为空")
+    private Boolean isBogon;
+    @NotNull(message = "allowMobile 不能为空")
+    private Boolean isCloudProvider;
+    @NotNull(message = "allowMobile 不能为空")
+    private Boolean isProxy;
+    @NotNull(message = "allowMobile 不能为空")
+    private Boolean isRelay;
+    @NotNull(message = "allowMobile 不能为空")
+    private Boolean isThreat;
+    @NotNull(message = "allowMobile 不能为空")
+    private Boolean isTor;
+    @NotNull(message = "allowMobile 不能为空")
+    private Boolean isTorExit;
+    @NotNull(message = "allowMobile 不能为空")
+    private Boolean isVpn;
+
+
 
     // 插件信息
     private String pluginName;

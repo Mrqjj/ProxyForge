@@ -13,6 +13,7 @@ import com.proxy.forge.vo.ResponseApi;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.beans.BeanCopier;
 import org.springframework.data.domain.PageRequest;
@@ -102,9 +103,9 @@ public class WebSiteServiceImpl implements WebSiteService {
                 predicates.add(cb.like(root.get("name"), "%" + searchWebSite.getKeyWord() + "%"));
             }
 
-            //2. 域名id 等与查询
-            if (searchWebSite.getDomainId() != null && searchWebSite.getDomainId() > 0) {
-                predicates.add(cb.equal(root.get("domainId"), searchWebSite.getDomainId()));
+            //2. 域名 等与查询
+            if (StringUtils.isNotBlank(searchWebSite.getDomain())) {
+                predicates.add(cb.equal(root.get("domain"), searchWebSite.getDomain()));
             }
 
             // 3. status 等于查询
@@ -143,6 +144,7 @@ public class WebSiteServiceImpl implements WebSiteService {
     @Override
     public Object deleteWebSite(QueryById query) {
         webSiteRepository.deleteById(query.getId());
+        stringRedisTemplate.opsForValue().getAndDelete(REDIS_WEBSITE_CACHE_KEY + query.getDomain());
         return new ResponseApi(200, API_MESSAGE_SUCCESS, null);
     }
 }

@@ -20,8 +20,7 @@ public class SearchWebSite {
 
 
     private String keyWord;   // 搜索关键词（站点名称）
-    @Min(value = 1)
-    private Integer domainId;    // 域名筛选（可选，空表示全部）
+    private String domain;    // 域名筛选（可选，空表示全部）
     private String status;    // 状态筛选（running/stopped/maintenance，空表示全部）
     @Min(value = 1)
     private int pageNum;      // 页码，从1开始

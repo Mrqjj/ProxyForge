@@ -2,8 +2,12 @@ package com.proxy.forge.controller;
 
 import com.proxy.forge.api.pojo.*;
 import com.proxy.forge.service.*;
+import com.proxy.forge.service.impl.ApiKeysServiceImpl;
 import com.proxy.forge.tools.CertificateManagement;
+import com.proxy.forge.tools.DNSUtils;
+import com.proxy.forge.tools.GlobalStaticVariable;
 import com.proxy.forge.vo.ResponseApi;
+import com.proxy.forge.vo.WhiteListVO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +15,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 /**
  *
@@ -42,7 +48,10 @@ public class ManagerController {
     GlobalReplaceService globalReplaceService;
     @Autowired
     WebSiteService websiteService;
-
+    @Autowired
+    ApiKeysService apiKeysService;
+    @Autowired
+    WhiteListService whiteListService;
 
     @RequestMapping(value = "/login")
     Object login(@RequestBody @Validated UserLogin userLogin, HttpServletRequest request, HttpServletResponse response) {
@@ -240,9 +249,126 @@ public class ManagerController {
         return websiteService.webSiteDetail(query);
     }
 
-
-    @RequestMapping(value = "delWebSite")
+    /**
+     * 删除指定ID的网站。
+     *
+     * @param query    包含待删除网站ID的对象
+     * @param request  HttpServletRequest 对象，可用于获取客户端请求的信息。
+     * @param response HttpServletResponse 对象，可用于向客户端发送响应。
+     * @return 返回一个对象，表示删除操作的结果。具体返回对象的类型和结构取决于实现逻辑
+     */
+    @RequestMapping(value = "/delWebSite")
     Object deleteWebSite(@RequestBody @Validated QueryById query, HttpServletRequest request, HttpServletResponse response) {
         return websiteService.deleteWebSite(query);
+    }
+
+    /**
+     * 根据提供的类型和域处理DNS查询。
+     *
+     * @param dnsQuery 包含查询域和类型的 DNS 查询对象。
+     * @param request  HttpServletRequest 对象处理收到的 HTTP 请求。
+     * @param response HttpServletResponse 对象处理输出的 HTTP 响应。
+     * @return 包含状态码、消息和DNS查询结果的ResponseApi对象。
+     */
+    @RequestMapping(value = "/dnsQuery")
+    Object dnsQuery(@RequestBody @Validated DNSQuery dnsQuery, HttpServletRequest request, HttpServletResponse response) {
+        List<DNSUtils.ResultItem> result = switch (dnsQuery.getType()) {
+            case "A" -> DNSUtils.getA(dnsQuery.getDomain());
+            case "AAAA" -> DNSUtils.getAAAA(dnsQuery.getDomain());
+            case "CNAME" -> DNSUtils.getCNAME(dnsQuery.getDomain());
+            case "TXT" -> DNSUtils.getTXT(dnsQuery.getDomain());
+            case "MX" -> DNSUtils.getMX(dnsQuery.getDomain());
+            case "NS" -> DNSUtils.getNS(dnsQuery.getDomain());
+            case "SOA" -> DNSUtils.getSOA(dnsQuery.getDomain());
+            case "SRV" -> DNSUtils.getSRV(dnsQuery.getDomain());
+            case "NAPTR" -> DNSUtils.getNAPTR(dnsQuery.getDomain());
+            case "CAA" -> DNSUtils.getCAA(dnsQuery.getDomain());
+            case "PTR" -> DNSUtils.getPTR(dnsQuery.getDomain());
+            default -> null;
+        };
+        if (result == null) {
+            return new ResponseApi(201, GlobalStaticVariable.API_MESSAGE_FAIL, null);
+        }
+        return new ResponseApi(200, GlobalStaticVariable.API_MESSAGE_SUCCESS, result);
+    }
+
+    /**
+     * 根据提供的搜索条件处理 API 密钥列表请求。
+     *
+     * @param searchApiKey 用于筛选 API 密钥的搜索条件
+     * @param request      包含客户端请求的 HttpServletRequest 对象
+     * @param response     HttpServletResponse 对象，用于将响应返回客户端
+     * @return 表示符合给定搜索条件的API密钥列表的对象
+     */
+    @RequestMapping(value = "/apiKeyList")
+    Object apiKeyList(@RequestBody @Validated SearchApiKey searchApiKey, HttpServletRequest request, HttpServletResponse response) {
+        return apiKeysService.apiKeyList(searchApiKey);
+    }
+
+    /**
+     * 处理保存API密钥的请求。
+     *
+     * @param saveApiKey 包含待保存 API 密钥详细信息的对象
+     * @param request    代表客户端请求的 HttpServletRequest 对象
+     * @param response   HttpServletResponse 对象，用于将响应返回客户端
+     * @return 保存作的结果，根据结果，可能是成功消息或错误
+     */
+    @RequestMapping(value = "/saveApiKey")
+    Object saveApiKey(@RequestBody @Validated SaveApiKey saveApiKey, HttpServletRequest request, HttpServletResponse response) {
+        return apiKeysService.saveApiKey(saveApiKey);
+    }
+
+    /**
+     * 根据所提供查询删除API密钥。
+     *
+     * @param query    API 密钥 ID 的 QueryById 对象，以删除
+     * @param request  代表当前HTTP请求的HttpServletRequest对象
+     * @param response HttpServletResponse 对象，用于向客户端发送响应
+     * @return 对象，通常是响应实体或状态，表示作结果
+     */
+    @RequestMapping(value = "/deleteApiKey")
+    Object deleteApiKey(@RequestBody @Validated QueryById query, HttpServletRequest request, HttpServletResponse response) {
+        return apiKeysService.deleteApiKey(query);
+    }
+
+    /**
+     * 处理来电请求的IP白名单流程。
+     *
+     * @param request  包含客户端对服务组请求的 HttpServletRequest 对象。
+     * @param response 包含 servlet 发送给客户端的响应的 HttpServletResponse 对象。
+     * @return 表示IP白名单作结果或状态的对象。
+     */
+    @RequestMapping(value = "/whiteList")
+    Object ipWhiteList(HttpServletRequest request, HttpServletResponse response) {
+        List<WhiteListVO> list = whiteListService.list();
+        return new ResponseApi(200, GlobalStaticVariable.API_MESSAGE_SUCCESS, list, list.size());
+    }
+
+    /**
+     * 将新的IP地址保存到白名单。
+     *
+     * @param saveIpWhiteList 包含 IP、到期时间和待保存笔记的对象。
+     * @param request         当前请求的 HttpServletRequest 对象。
+     * @param response        当前响应的 HttpServletResponse 对象。
+     * @return 一个状态码为200的ResponseApi对象，作成功时发送成功消息。
+     */
+    @RequestMapping(value = "/saveWhiteList")
+    Object saveWhiteList(@RequestBody @Validated SaveIpWhiteList saveIpWhiteList, HttpServletRequest request, HttpServletResponse response) {
+        whiteListService.addIp(saveIpWhiteList.getIp(), saveIpWhiteList.getTtl(), saveIpWhiteList.getNotes());
+        return new ResponseApi(200, GlobalStaticVariable.API_MESSAGE_SUCCESS, null);
+    }
+
+    /**
+     * 从白名单中删除一个IP。
+     *
+     * @param saveIpWhiteList 包含待删除IP的对象。该对象必须经过验证后才能传递给该方法。
+     * @param request         HttpServletRequest 对象，代表客户端的请求。
+     * @param response        HttpServletResponse 对象用于向客户端发送响应。
+     * @return 表示作结果的对象，可以是消息、状态或其他相关信息。
+     */
+    @RequestMapping(value = "/deleteWhiteList")
+    Object deleteWhiteList(@RequestBody @Validated SaveIpWhiteList saveIpWhiteList, HttpServletRequest request, HttpServletResponse response) {
+        whiteListService.removeIp(saveIpWhiteList.getIp());
+        return new ResponseApi(200, GlobalStaticVariable.API_MESSAGE_SUCCESS, null);
     }
 }

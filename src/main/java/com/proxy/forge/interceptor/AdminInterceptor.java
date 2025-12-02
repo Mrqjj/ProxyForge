@@ -49,7 +49,9 @@ public class AdminInterceptor implements HandlerInterceptor {
         if (StringUtils.isNotBlank(authorization) && authorization.startsWith("Bearer ")) {
             authorization = authorization.replace("Bearer ", "");
             try {
-                if (!JwtUtils.isExpired(authorization)) {
+                if (!JwtUtils.isExpired(authorization)
+                        && JSONObject.parseObject(JwtUtils.parse(authorization).getSubject()).containsKey("userName")
+                ) {
                     return true;
                 }
             } catch (Exception ignored) {

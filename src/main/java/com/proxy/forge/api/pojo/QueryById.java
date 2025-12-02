@@ -21,4 +21,6 @@ public class QueryById {
 
     @Min(value = 1)
     private Integer id;
+
+    private String domain;
 }

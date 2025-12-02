@@ -12,10 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
 
@@ -40,6 +37,21 @@ public class MasterController {
     @Autowired
     StringRedisTemplate stringRedisTemplate;
 
+
+    /**
+     * 检查终端设备信息的有效性或安全性。
+     *
+     * @param checkDeviceInfo 终端设备信息，包含需验证的加密字符串。
+     * @param request         包含客户端对Servlet发出请求的HttpServletRequest对象。
+     * @param response        用于将响应返回客户端的HttpServletResponse对象。
+     * @return 返回一个对象，表示检查的结果。具体类型和内容取决于实现逻辑。
+     */
+    @RequestMapping(value = "/check")
+    public Object check(@CookieValue(value = "tk", required = false) String tk, @RequestBody @Validated CheckDeviceInfo checkDeviceInfo, HttpServletRequest request, HttpServletResponse response) {
+        return proxyRouterService.check(tk, checkDeviceInfo, request, response);
+    }
+
+
     /**
      * 处理所有入站请求并返回请求URI。
      *
@@ -48,20 +60,23 @@ public class MasterController {
      * @return 一个ResponseEntity，主体设置为请求URI，表示HTTP响应成功。
      */
     @RequestMapping("/**")
-    public Object proxyRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        return proxyRouterService.dispatch(request, response);
+    public Object proxyRequest(@CookieValue(value = "tk", required = false) String tk, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        return proxyRouterService.dispatch(tk, request, response);
     }
 
-
-    @RequestMapping(value = "/check")
-    public Object check(@RequestBody @Validated CheckDeviceInfo checkDeviceInfo, HttpServletRequest request, HttpServletResponse response) {
-        return proxyRouterService.check(checkDeviceInfo, request, response);
-    }
-
+    /**
+     * 检查通过后的第一个请求,由该请求进行转发页面地址
+     *
+     * @param tk       客户端从口进入分配的唯一标识
+     * @param request  包含客户端对Servlet发出请求的HttpServletRequest对象。
+     * @param response 用于将响应返回客户端的HttpServletResponse对象。
+     * @return 返回一个ResponseEntity，主体设置为"sr"字符串，表示HTTP响应成功。
+     */
     @RequestMapping(value = "/sr")
-    public Object startRequest(HttpServletRequest request, HttpServletResponse response) {
-        return ResponseEntity.ok().body("sr");
+    public Object startRequest(@CookieValue(value = "tk", required = false) String tk, HttpServletRequest request, HttpServletResponse response) {
+        return proxyRouterService.startRequest(tk, request, response);
     }
+
 
     /**
      * 处理ACME挑战域名验证请求。
