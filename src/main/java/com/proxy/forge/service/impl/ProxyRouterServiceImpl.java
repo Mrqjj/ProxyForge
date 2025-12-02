@@ -22,6 +22,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
+import org.apache.http.entity.ContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -147,8 +148,6 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         String serverName = request.getServerName();
         // 客户端IP
         String clientIp = request.getRemoteAddr();
-
-
         // 这里应该 回调插件 准备请求目标站点第一个页面前的回调。 需要传入 tk 用户终端唯一标识, serverName 当前客户端请求的主机名,clientIp 客户端ip，proxyStr 代理信息
         return ResponseEntity.status(HttpStatus.FOUND)
                 .header("Location", "/index")
@@ -185,10 +184,7 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         GlobalSettings globalSettings = JSONObject.parseObject(stringRedisTemplate.opsForValue().get("globalSettings"), GlobalSettings.class);
         //请求路径
         String path = request.getRequestURI();
-        // 请求路径
-        String uri = request.getRequestURI();
-        // 查询字符串
-        String queryString = request.getQueryString();
+
         // 如果访问的文件 本地存在，则返回本地内容
         Resource resource = resourceLoader.getResource("classpath:/static" + (path.equals("/") ? "/index.html" : path));
         if (resource.exists()) {
@@ -215,38 +211,50 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                     .contentType(mediaType)
                     .body(bytes);
         }
+        // 查询字符串
+        String queryString = request.getQueryString();
+        if (path.equalsIgnoreCase("/index") && StringUtils.isBlank(queryString)) {
+            path = "/";
+        }
         // 获取主机名.
         String serverName = request.getServerName();
         // 客户端IP
         String clientIp = request.getRemoteAddr();
-
-
         // 读取web配置
-        String websiteConfig = stringRedisTemplate.opsForValue().get(REDIS_WEBSITE_CACHE_KEY + serverName);
-        if (StringUtils.isBlank(websiteConfig)) {
+        String websiteStr = stringRedisTemplate.opsForValue().get(REDIS_WEBSITE_CACHE_KEY + serverName);
+        if (StringUtils.isBlank(websiteStr)) {
             InternetDomainName idn = InternetDomainName.from(serverName);
             if (idn.isUnderPublicSuffix()) {
-                websiteConfig = stringRedisTemplate.opsForValue().get(REDIS_WEBSITE_CACHE_KEY + "*." + idn.topPrivateDomain());
+                websiteStr = stringRedisTemplate.opsForValue().get(REDIS_WEBSITE_CACHE_KEY + "*." + idn.topPrivateDomain());
             }
         }
-        if (StringUtils.isBlank(websiteConfig)) {
+        if (StringUtils.isBlank(websiteStr)) {
             log.info("[获取站点配置]:  终端IP: [{}], 请求主机名: [{}]", clientIp, serverName);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseApi(403, "error", "data error"));
         }
 
         // 读取站点的配置文件
-        WebSite webSite = JSONObject.parseObject(websiteConfig, WebSite.class);
-
-
+        WebSite webSite = JSONObject.parseObject(websiteStr, WebSite.class);
+        String url;
+        if (StringUtils.isNotBlank(queryString)) {
+            url = webSite.getTargetUrl() + path + "?" + queryString;
+        } else {
+            url = webSite.getTargetUrl() + path;
+        }
         HashMap<String, Object> header = generateHader(request);
+        byte[] res;
         if (request.getMethod().equalsIgnoreCase("POST")) {
             String body = StreamUtils.copyToString(request.getInputStream(), StandardCharsets.UTF_8);
+            res = HttpUtils.sendPostRequest(url, body, header, null);
         } else if (request.getMethod().equalsIgnoreCase("GET")) {
-
+            res = HttpUtils.sendGetRequest(url, header, "socks5://127.0.0.1:8889");
+        } else {
+            res = new byte[0];
         }
         HttpResponse httpResponse = (HttpResponse) header.get("response");
         generateResponHeader(httpResponse, response);
-        return null;
+        return ResponseEntity.status(HttpStatus.valueOf(httpResponse.getStatusLine().getStatusCode()))
+                .body(res);
     }
 
     /**
