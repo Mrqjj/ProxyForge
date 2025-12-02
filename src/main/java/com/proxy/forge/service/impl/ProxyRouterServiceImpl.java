@@ -149,7 +149,7 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         String clientIp = request.getRemoteAddr();
 
 
-        // 这里应该 回调插件。插件如果没有处理目标url  就读取站点配置的目标url进行请求。
+        // 这里应该 回调插件 准备请求目标站点第一个页面前的回调。 需要传入 tk 用户终端唯一标识, serverName 当前客户端请求的主机名,clientIp 客户端ip，proxyStr 代理信息
         return ResponseEntity.status(HttpStatus.FOUND)
                 .header("Location", "/index")
                 .build();
