@@ -157,7 +157,6 @@ public class HttpUtils {
         HttpEntity entity = response.getEntity();
         if (headerMap != null) {
             headerMap.put("response", response);
-            headerMap.put("responseStatusCode", String.valueOf(response.getStatusLine().getStatusCode()));
         }
         if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
             return EntityUtils.toByteArray(entity);
