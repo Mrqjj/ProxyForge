@@ -128,7 +128,7 @@ java -jar target/ProxyForge-0.1.jar
 ```
 
 ### 6. 访问
-- 管理后台：`http://your-server/pfadmin`
+- 管理后台：`http://your-server/admin/`
 - 默认端口：80（HTTP）、443（HTTPS）
 
 ## 📖 使用说明

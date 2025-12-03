@@ -128,7 +128,7 @@ java -jar target/ProxyForge-0.1.jar
 ```
 
 ### 6. Access
-- Management Backend: `http://your-server/pfadmin`
+- Management Backend: `http://your-server/admin/`
 - Default Port: 80 (HTTP), 443 (HTTPS)
 
 ## 📖 Usage
