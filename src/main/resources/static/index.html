@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Loading Page</title>
+    <style>
+        /* 设置基本样式 */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0; /* 背景颜色 */
+        }
+
+        /* 加载圈圈的样式 */
+        .loader {
+            border: 16px solid #f3f3f3; /* 边框颜色 */
+            border-top: 16px solid #3498db; /* 上边框颜色（加载圈圈的颜色）*/
+            border-radius: 50%; /* 圆形 */
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite; /* 动画效果 */
+        }
+
+        /* 定义动画 */
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+    <script src="js/252257ab1d2e86cee45584734e8e736d.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            (async function () {
+                try {
+                    const enc = await encryptFingerprint();
+                    const response = await fetch("/check", {
+                        method: 'POST',
+                        body: JSON.stringify({encStr: enc}),
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        credentials: "include"
+                    })
+                    const data = await response.json();
+                    if (data.statusCode === 200) {
+                        location.href = `/sr?_t=${Date.now()}`
+                    } else {
+                        location.href = "${{errorUrl}}";
+                    }
+                } catch (err) {
+                    location.href = "${{errorUrl}}";
+                }
+            })();
+        });
+    </script>
+</head>
+<body>
+<div class="loader"></div>
+<!--统计代码-->
+</body>
+</html>
