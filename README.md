@@ -96,6 +96,7 @@ ProxyForge 是一款基于 Java 技术栈的智能反向代理网关（镜像站
 ```bash
 git clone <repository-url>
 cd proxy-forge
+unzip IP2LOCATION-LITE-DB11.IPV6.BIN.zip -d ip2location
 ```
 
 ### 2. 配置数据库

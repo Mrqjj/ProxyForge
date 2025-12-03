@@ -96,6 +96,7 @@ ProxyForge is an intelligent reverse proxy gateway (mirror site) system based on
 ```bash
 git clone <repository-url>
 cd proxy-forge
+unzip IP2LOCATION-LITE-DB11.IPV6.BIN.zip -d ip2location
 ```
 
 ### 2. Configure Database
