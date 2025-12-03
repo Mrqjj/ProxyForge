@@ -327,7 +327,17 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 
 ## 📄 License
 
-    This project is licensed under the GNU General Public License v3.0 (GPL-3.0)
+This project is open source under the GNU General Public License v3.0 (GPL-3.0).
+
+You can:
+
+- Use the source code of this project
+- Modify and republish this item
+- Commercial or non-commercial use in compliance with the terms of the GPL 3.0
+
+**Disclaimer**: This item is provided "as is" without liability.
+
+For full licenses, please see the [LICENSE](./LICENSE) file.
 
 ## 📧 Contact
 
