@@ -29,7 +29,7 @@ import java.nio.charset.StandardCharsets;
  * @Version: 1.0
  * @Date: 2025-11-19 22:57
  **/
-@RestController
+@Controller
 public class MasterController {
 
     @Autowired

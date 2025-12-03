@@ -18,7 +18,11 @@ public class GlobalStaticVariable {
      * 该常数作为密钥的前缀，确保它们在 Redis 中唯一可识别。
      */
     public static final String REDIS_WEBSITE_CACHE_KEY = "webSiteConfig:";
-
+    /**
+     * 用于存储和检索 Redis 中网站日志数据的密钥。
+     * 该常量作为密钥的前缀，确保它们在 Redis 中唯一可识别。
+     */
+    public static final String REDIS_WEBSITE_LOGS_KEY =  "webSiteLogs:";
     /**
      * 常量，表示API调用成功时的返回消息。
      * 该字符串用于在API响应中指示操作已成功完成。

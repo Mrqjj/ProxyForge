@@ -32,8 +32,8 @@ public interface WebSiteService {
      * 获取站点列表。
      *
      * @param searchWebSite 用于搜索站点的参数，包括关键词、域名筛选条件、状态筛选条件、页码及每页数量等信息
-     * @param request 包含客户端数据的 Servlet 请求
-     * @param response 输出的servlet响应，用于将处理结果返回给客户端
+     * @param request       包含客户端数据的 Servlet 请求
+     * @param response      输出的servlet响应，用于将处理结果返回给客户端
      * @return 返回一个对象，表示查询到的站点列表。具体返回对象的类型和结构取决于实现逻辑
      */
     Object webSiteList(SearchWebSite searchWebSite, HttpServletRequest request, HttpServletResponse response);
@@ -53,4 +53,12 @@ public interface WebSiteService {
      * @return 返回一个对象，表示删除操作的结果。具体返回对象的类型和结构取决于实现逻辑
      */
     Object deleteWebSite(QueryById query);
+
+    /**
+     * 获取指定服务器名称的网站配置信息。
+     *
+     * @param serverName 服务器的名称
+     * @return 返回一个对象，表示所查询到的网站配置信息。具体返回对象的类型和结构取决于实现逻辑
+     */
+    Object getWebSiteConfig(String serverName);
 }

@@ -1,6 +1,7 @@
 package com.proxy.forge.service.impl;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.google.common.net.InternetDomainName;
 import com.proxy.forge.api.pojo.QueryById;
 import com.proxy.forge.api.pojo.SaveWebSite;
 import com.proxy.forge.api.pojo.SearchWebSite;
@@ -13,6 +14,7 @@ import com.proxy.forge.vo.ResponseApi;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.beans.BeanCopier;
@@ -20,6 +22,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -40,6 +44,7 @@ import static com.proxy.forge.tools.GlobalStaticVariable.*;
  * @Version: 1.0
  * @Date: 2025-11-28 12:26
  **/
+@Slf4j
 @Service
 public class WebSiteServiceImpl implements WebSiteService {
 
@@ -145,5 +150,29 @@ public class WebSiteServiceImpl implements WebSiteService {
         webSiteRepository.deleteById(query.getId());
         stringRedisTemplate.opsForValue().getAndDelete(REDIS_WEBSITE_CACHE_KEY + query.getDomain());
         return new ResponseApi(200, API_MESSAGE_SUCCESS, null);
+    }
+
+    /**
+     * 获取指定服务器名称的网站配置信息。
+     *
+     * @param serverName 服务器的名称
+     * @return 返回一个对象，表示获取到的网站配置信息。具体返回对象的类型和结构取决于实现逻辑。
+     */
+    @Override
+    public Object getWebSiteConfig(String serverName) {
+        // 读取web配置
+        String websiteStr = stringRedisTemplate.opsForValue().get(REDIS_WEBSITE_CACHE_KEY + serverName);
+        if (StringUtils.isBlank(websiteStr)) {
+            InternetDomainName idn = InternetDomainName.from(serverName);
+            if (idn.isUnderPublicSuffix()) {
+                websiteStr = stringRedisTemplate.opsForValue().get(REDIS_WEBSITE_CACHE_KEY + "*." + idn.topPrivateDomain());
+            }
+        }
+        if (StringUtils.isBlank(websiteStr)) {
+            log.info("[获取站点配置]:  请求主机名: [{}]", serverName);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseApi(403, "error", "data error"));
+        }
+        // 读取站点的配置文件
+        return JSONObject.parseObject(websiteStr, WebSite.class);
     }
 }

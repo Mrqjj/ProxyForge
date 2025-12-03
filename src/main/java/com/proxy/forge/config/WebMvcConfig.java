@@ -13,7 +13,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * <p>PackageName: com.proxy.forge.config</p>
  * <p>Description: 拦截器配置</p>
  * <p>Copyright: Copyright (c) 2025 by Ts</p>
-
  *
  * @Author: Ts
  * @Version: 1.0
@@ -24,14 +23,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     @Autowired
-    private AdminInterceptor globalInterceptor;
-
+    private AdminInterceptor adminInterceptor;
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(globalInterceptor)
+        registry.addInterceptor(adminInterceptor)
                 .addPathPatterns("/pfadmin/**") // intercept all requests
                 .excludePathPatterns("/pfadmin/login") // You can exclude static resources or specific interfaces
-                ;
+        ;
+
     }
 
 }

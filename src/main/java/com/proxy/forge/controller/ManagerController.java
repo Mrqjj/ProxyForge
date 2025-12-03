@@ -51,6 +51,8 @@ public class ManagerController {
     ApiKeysService apiKeysService;
     @Autowired
     WhiteListService whiteListService;
+    @Autowired
+    ClientLogsService clientLogsService;
 
     @RequestMapping(value = "/login")
     Object login(@RequestBody @Validated UserLogin userLogin, HttpServletRequest request, HttpServletResponse response) {
@@ -370,4 +372,52 @@ public class ManagerController {
         whiteListService.removeIp(saveIpWhiteList.getIp());
         return new ResponseApi(200, GlobalStaticVariable.API_MESSAGE_SUCCESS, null);
     }
+
+    /**
+     * 根据请求记录地理国家信息。
+     *
+     * @param geoCountry 请求参数。
+     * @param request    包含客户端请求信息的 HttpServletRequest 对象。
+     * @param response   HttpServletResponse 对象用于向客户端发送响应。
+     * @return 表示作结果的对象，可以是状态或消息。
+     */
+    @RequestMapping(value = "/geoCountry")
+    Object logGeoCountry(@RequestBody @Validated GeoCountry geoCountry, HttpServletRequest request, HttpServletResponse response) {
+        return clientLogsService.logGeoCountry(geoCountry);
+    }
+    @RequestMapping(value = "/geoCity")
+    Object logGeoCity(@RequestBody @Validated GeoCountry geoCountry, HttpServletRequest request, HttpServletResponse response) {
+        return clientLogsService.logGeoCity(geoCountry);
+    }
+
+    /**
+     * 根据提供的地理国家信息检索指定域名的统计数据。
+     *
+     * @param geoCountry 地理国家信息，必须验证。该参数用于过滤领域统计量。
+     * @param request 包含客户端请求的 HttpServletRequest 对象。
+     * @param response 用于将响应返回客户端的 HttpServletResponse 对象。
+     * @return 包含与域名相关的统计数据的对象，按所给地理国家进行筛选。该对象的具体结构取决于实现方式
+     * 以及领域统计的具体要求。
+     */
+    @RequestMapping(value = "/domainStats")
+    Object domainStats(@RequestBody @Validated GeoCountry geoCountry, HttpServletRequest request, HttpServletResponse response) {
+        return clientLogsService.domainStats(geoCountry);
+    }
+
+/**
+     * 检索所提供地理国家的趋势统计数据。
+     *
+     * @param geoCountry 用于获取趋势统计的地理国家。该参数应为有效的GeoCountry对象。
+     * @param request 包含客户端对服务组请求的 HttpServletRequest 对象。
+     * @param response HttpServletResponse 对象，将响应返回客户端。
+     * @return 包含指定地理国家趋势统计的对象。该对象的具体结构和内容取决于clientLogsService.trendStats方法的实现
+     * .
+     */
+    @RequestMapping(value = "/trendStats")
+    Object trendStats(@RequestBody @Validated GeoCountry geoCountry, HttpServletRequest request, HttpServletResponse response) {
+        return clientLogsService.trendStats(geoCountry);
+    }
+
+
+
 }
