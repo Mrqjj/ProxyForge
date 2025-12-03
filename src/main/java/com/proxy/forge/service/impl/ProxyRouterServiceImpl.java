@@ -247,7 +247,7 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
             String body = StreamUtils.copyToString(request.getInputStream(), StandardCharsets.UTF_8);
             res = HttpUtils.sendPostRequest(url, body, header, null);
         } else if (request.getMethod().equalsIgnoreCase("GET")) {
-            res = HttpUtils.sendGetRequest(url, header, "socks5://127.0.0.1:8889");
+            res = HttpUtils.sendGetRequest(url, header, null);
         } else {
             res = new byte[0];
         }
