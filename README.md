@@ -345,7 +345,7 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 
 ## 📄 许可证
 
-    GPL-3.0
+    本项目采用GNU通用公共许可证v3.0（GPL-3.0）授权
 
 ## 📧 联系方式
 
