@@ -29,8 +29,7 @@ import java.util.List;
  * <p>ProjectName: proxy-forge</p>
  * <p>PackageName: com.proxy.forge.service.impl</p>
  * <p>Description: apiKeys 数据库操作</p>
- * <p>Copyright: Copyright (c) 2023 by Ts</p>
- * <p>Contacts: Ts vx: Q_Q-1992</p>
+ * <p>Copyright: Copyright (c) 2025 by Ts</p>
  *
  * @Author: Ts
  * @Version: 1.0

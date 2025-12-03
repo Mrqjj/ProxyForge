@@ -13,8 +13,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
  * <p>ProjectName: wechat</p>
  * <p>PackageName: com.wechat.tools</p>
  * <p>Description: 实体类参数校验异常统一处理</p>
- * <p>Copyright: Copyright (c) 2023 by Ts</p>
- * <p>Contacts: Ts vx: Q_Q-1992</p>
+ * <p>Copyright: Copyright (c) 2025 by Ts</p>
  *
  * @Author: 85773
  * @Version: 1.0

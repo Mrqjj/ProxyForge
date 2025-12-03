@@ -46,7 +46,7 @@ import java.util.Map;
  * <p>PackageName: com.proxy.forge.tools</p>
  * <p>Description: 网络请求工具类,支持http代理和socks5代理 的账号密码模式</p>
  * <p>Copyright: Copyright (c) 2025 by Ts</p>
- * <p>Contacts: Ts vx: Q_Q-1992</p>
+
  *
  * @Author: Ts
  * @Version: 1.0

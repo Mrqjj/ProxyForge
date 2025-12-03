@@ -13,7 +13,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * <p>PackageName: com.proxy.forge.config</p>
  * <p>Description: 拦截器配置</p>
  * <p>Copyright: Copyright (c) 2025 by Ts</p>
- * <p>Contacts: Ts vx: Q_Q-1992</p>
+
  *
  * @Author: Ts
  * @Version: 1.0

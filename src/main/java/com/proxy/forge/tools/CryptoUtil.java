@@ -25,8 +25,7 @@ import java.util.zip.GZIPOutputStream;
  * <p>ProjectName: OverseasProject</p>
  * <p>PackageName: com.vivcms.overseas.tools</p>
  * <p>Description: gzip解压缩工具类</p>
- * <p>Copyright: Copyright (c) 2023 by Ts</p>
- * <p>Contacts: Ts vx: Q_Q-1992</p>
+ * <p>Copyright: Copyright (c) 2025 by Ts</p>
  *
  * @Author: Ts
  * @Version: 1.0

@@ -15,8 +15,7 @@ import org.springframework.stereotype.Repository;
  * <p>ProjectName: proxy-forge</p>
  * <p>PackageName: com.proxy.forge.repository</p>
  * <p>Description: 站点列表数据库操作</p>
- * <p>Copyright: Copyright (c) 2023 by Ts</p>
- * <p>Contacts: Ts vx: Q_Q-1992</p>
+ * <p>Copyright: Copyright (c) 2025 by Ts</p>
  *
  * @Author: Ts
  * @Version: 1.0

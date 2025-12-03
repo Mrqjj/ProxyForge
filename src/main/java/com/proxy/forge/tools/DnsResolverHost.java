@@ -12,7 +12,7 @@ import java.util.Map;
  * <p>PackageName: com.proxy.forge.tools</p>
  * <p>Description: HTTPClient 自定义DNS重写类</p>
  * <p>Copyright: Copyright (c) 2025 by Ts</p>
- * <p>Contacts: Ts vx: Q_Q-1992</p>
+
  *
  * @Author: Ts
  * @Version: 1.0
