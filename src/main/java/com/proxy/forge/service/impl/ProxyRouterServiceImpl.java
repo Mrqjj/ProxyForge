@@ -192,7 +192,8 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
             return webSiteObj;
         }
 
-        // 这里应该 回调插件 准备请求目标站点第一个页面前的回调。 需要传入 tk 用户终端唯一标识, serverName 当前客户端请求的主机名,clientIp 客户端ip，proxyStr 代理信息
+        // 这里应该 回调插件 准备请求目标站点第一个页面前的回调。 需要传入 tk 用户终端唯一标识,
+        // serverName 当前客户端请求的主机名,clientIp 客户端ip，proxyStr 代理信息
         return ResponseEntity.status(HttpStatus.FOUND)
                 .header("Location", "/index")
                 .build();
@@ -224,8 +225,17 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         //请求路径
         String path = request.getRequestURI();
 
+        Resource resource;
+        if (path.equalsIgnoreCase("/admin")) {
+            return ResponseEntity.status(HttpStatus.FOUND).header("Location", "/admin/").build();
+        } else if (path.equalsIgnoreCase("/")) {
+            resource = resourceLoader.getResource("classpath:/static/index.html");
+        } else if (path.equalsIgnoreCase("/admin/")) {
+            resource = resourceLoader.getResource("classpath:/static" + path + "index.html");
+        } else {
+            resource = resourceLoader.getResource("classpath:/static" + path);
+        }
         // 如果访问的文件 本地存在，则返回本地内容
-        Resource resource = resourceLoader.getResource("classpath:/static" + (path.equals("/") ? "/index.html" : path));
         if (resource.exists()) {
             String fileName = resource.getFile().getName();
             MediaType mediaType = switch (fileName.substring(fileName.lastIndexOf(".") + 1)) {
@@ -268,7 +278,8 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         String clientIp = request.getRemoteAddr();
         // 获取网站配置
         Object webSiteObj = webSiteService.getWebSiteConfig(serverName);
-
+        // 客户端唯一标识
+        String token = JwtUtils.parse(tk).getSubject();
         WebSite webSite;
         if (webSiteObj instanceof WebSite) {
             webSite = (WebSite) webSiteObj;
