@@ -40,6 +40,9 @@ jobs:
             git checkout -b ${{ env.SYNC_BRANCH }}
           fi
           git checkout -B ${{ env.SYNC_BRANCH }} gitee/${{ env.SYNC_BRANCH }}
+          
+          # 使用 PAT 推送
+          git remote set-url origin https://${{ secrets.GH_PAT }}@github.com/Mrqjj/ProxyForge.git
           git push origin ${{ env.SYNC_BRANCH }}
 
       - name: Sync tags
