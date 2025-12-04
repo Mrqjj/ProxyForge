@@ -1,24 +1,21 @@
 name: Sync Master from Gitee
 
 on:
-  schedule:
-    - cron: '0 * * * *'  # 每小时同步一次，可按需调整
-  workflow_dispatch:      # 手动触发同步
+  workflow_dispatch:    # 允许外部调用触发
 
 env:
-  GITEE_REPO: "gitee.com/mr_qjj/proxy-forge.git"  # Gitee 仓库地址
-  PROJECT_NAME: "proxy-forge"                             # 项目名字
-  SYNC_BRANCH: "master"                                   # 要同步的分支
+  GITEE_REPO: "gitee.com/mr_qjj/proxy-forge.git"
+  PROJECT_NAME: "proxy-forge"
+  SYNC_BRANCH: "master"
 
 jobs:
   sync:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout GitHub
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # 获取完整历史
+          fetch-depth: 0
 
       - name: Configure Git
         run: |
@@ -36,23 +33,17 @@ jobs:
 
       - name: Sync master branch
         run: |
-          echo "Syncing branch '${{ env.SYNC_BRANCH }}' for project: ${{ env.PROJECT_NAME }}"
-          
-          # 检查 GitHub 是否已有 master 分支
           if git ls-remote --heads origin ${{ env.SYNC_BRANCH }} | grep -q ${{ env.SYNC_BRANCH }}; then
-            echo "Branch '${{ env.SYNC_BRANCH }}' exists in GitHub, updating..."
+            echo "Branch exists, updating..."
           else
-            echo "Branch '${{ env.SYNC_BRANCH }}' does not exist in GitHub, creating..."
+            echo "Branch does not exist, creating..."
             git checkout -b ${{ env.SYNC_BRANCH }}
           fi
-          
           git checkout -B ${{ env.SYNC_BRANCH }} gitee/${{ env.SYNC_BRANCH }}
           git push origin ${{ env.SYNC_BRANCH }}
 
       - name: Sync tags
         run: |
-          echo "Syncing tags for project: ${{ env.PROJECT_NAME }}"
           for tag in $(git tag -l); do
-            echo "Sync tag: $tag"
             git push origin $tag
           done
