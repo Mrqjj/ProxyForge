@@ -1,6 +1,6 @@
 # ProxyForge
 
-[🇨🇳 中文文档](README.zh-CN.md) | [🇺🇸 English](README.en-US.md)
+[🇨🇳 中文文档](README.md) | [🇺🇸 English](README.en.md)
 
 #### Description
 
