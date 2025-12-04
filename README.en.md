@@ -1,5 +1,7 @@
 # ProxyForge
 
+[🇨🇳 中文文档](README.zh-CN.md) | [🇺🇸 English](README.en-US.md)
+
 #### Description
 
 ProxyForge is an intelligent reverse proxy gateway (mirror site) system based on Java technology stack, designed to solve the pain points of traditional reverse proxy solutions:

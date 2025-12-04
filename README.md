@@ -1,3 +1,8 @@
+
+# ProxyForge
+
+[🇨🇳 中文文档](README.zh-CN.md) | [🇺🇸 English](README.en-US.md)
+
 # ProxyForge
 
 #### 介绍
