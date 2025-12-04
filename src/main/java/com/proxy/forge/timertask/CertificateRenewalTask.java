@@ -45,6 +45,7 @@ public class CertificateRenewalTask {
     @Autowired
     StringRedisTemplate stringRedisTemplate;
 
+    // 每天凌晨2点检查证书是否有即将过期需要续签的
     @Scheduled(cron = "0 0 2 * * ?")
     public void startTask() throws Exception {
         GlobalSettings globalSetting = globalSettingService.getGlobalSetting();
