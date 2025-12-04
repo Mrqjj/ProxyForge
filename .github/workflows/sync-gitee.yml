@@ -1,31 +1,33 @@
 name: Sync from Gitee
 
+# 可以定时或者手动触发
 on:
   schedule:
-    # 每天凌晨 2 点执行（UTC 时间，UTC = 北京时间 -8）
-    - cron: '30 * * * *' 
-  workflow_dispatch: # 手动触发
+    - cron: '30 * * * *'
+  workflow_dispatch: # 支持手动触发
 
 jobs:
   sync:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      # 拉取 GitHub 仓库内容
+      - name: Checkout GitHub repo
         uses: actions/checkout@v3
 
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.8.1
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Add Gitee remote
+      # 拉取 Gitee 仓库内容
+      - name: Pull from Gitee
         run: |
-          git remote add gitee git@gitee.com:mr_qjj/proxy-forge.git
+          git remote add gitee https://gitee.com/mr_qjj/proxy-forge.git
           git fetch gitee
 
-      - name: Merge & Push
+      # 合并 Gitee 分支到本地 develop 分支
+      - name: Merge Gitee into GitHub
         run: |
           git checkout develop
           git merge gitee/develop --allow-unrelated-histories -m "Sync from Gitee"
+
+      # 推送合并后的代码到 GitHub
+      - name: Push to GitHub
+        run: |
           git push origin develop
