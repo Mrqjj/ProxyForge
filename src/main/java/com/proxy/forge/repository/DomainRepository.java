@@ -50,6 +50,7 @@ public interface DomainRepository extends JpaRepository<Domain, Integer> , JpaSp
             "d.visits =COALESCE(:#{#domain.visits},d.visits), " +
             "d.createTime =COALESCE(:#{#domain.createTime},d.createTime), " +
             "d.certExpTime =COALESCE(:#{#domain.certExpTime},d.certExpTime), " +
+            "d.method =COALESCE(:#{#domain.method},d.method), " +
             "d.remark =COALESCE(:#{#domain.remark},d.remark) " +
             "where d.id=:#{#domain.id}")
     int updateDomainById(@Param("domain") Domain domain);

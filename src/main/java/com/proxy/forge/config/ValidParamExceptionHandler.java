@@ -29,7 +29,7 @@ public class ValidParamExceptionHandler {
         errorMessage.append("invalidRequest: ");
         for (ObjectError error : bindingResult.getAllErrors()) {
             FieldError fieldError = (FieldError) error;
-            errorMessage.append("[" + fieldError.getField());
+            errorMessage.append("[").append(fieldError.getField());
             errorMessage.append(":");
             errorMessage.append(fieldError.getDefaultMessage());
             errorMessage.append("]");

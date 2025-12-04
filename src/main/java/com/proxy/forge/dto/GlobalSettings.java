@@ -1,4 +1,4 @@
-package com.proxy.forge.api.pojo;
+package com.proxy.forge.dto;
 
 import lombok.Data;
 
@@ -26,7 +26,7 @@ public class GlobalSettings {
     private int cacheTime;
 
     // 证书是否自动续签
-    private boolean autoRenew;
+    private Boolean autoRenew;
 
     // 到期前多少天自动续签证书
     private int renewDays;

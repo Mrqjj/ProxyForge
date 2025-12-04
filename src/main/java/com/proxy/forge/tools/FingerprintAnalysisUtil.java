@@ -4,7 +4,7 @@ package com.proxy.forge.tools;
 import com.alibaba.fastjson2.JSONObject;
 import com.google.common.net.InternetDomainName;
 import com.proxy.forge.api.pojo.FingerprintAnalysisReuslt;
-import com.proxy.forge.api.pojo.GlobalSettings;
+import com.proxy.forge.dto.GlobalSettings;
 import com.proxy.forge.dto.WebSite;
 import com.proxy.forge.service.IpInfoService;
 import com.proxy.forge.vo.fingerprint.Battery;

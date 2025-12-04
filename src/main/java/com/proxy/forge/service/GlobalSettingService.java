@@ -1,6 +1,6 @@
 package com.proxy.forge.service;
 
-import com.proxy.forge.api.pojo.GlobalSettings;
+import com.proxy.forge.dto.GlobalSettings;
 
 /**
  *

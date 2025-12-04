@@ -26,6 +26,7 @@ public class SaveDomain {
 
     private boolean ssl;
 
+    private String method;
 
     private String remark;
 }

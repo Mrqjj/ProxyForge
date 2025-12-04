@@ -55,6 +55,7 @@ public class DomainServiceImpl implements DomainService {
         domain.setEnableSsl(saveDomain.isSsl());
         domain.setRemark(saveDomain.getRemark());
         domain.setStatus(saveDomain.getStatus());
+        domain.setMethod(saveDomain.getMethod());
 
         String domainName = saveDomain.getDomain();
         String safeDomain = domainName.replaceAll("[^a-zA-Z0-9.-]", "_");
@@ -134,4 +135,5 @@ public class DomainServiceImpl implements DomainService {
         List<Domain> domains = domainRepository.queryAvailableDomains();
         return new ResponseApi(200, "成功", domains);
     }
+
 }

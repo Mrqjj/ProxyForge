@@ -8,6 +8,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.TimeZone;
 
@@ -22,6 +23,7 @@ import java.util.TimeZone;
  * @Version: 1.0
  * @Date: 2025-11-19 16:31
  **/
+@EnableScheduling
 @EnableAsync
 @SpringBootApplication
 public class ProxyForgeApplication {

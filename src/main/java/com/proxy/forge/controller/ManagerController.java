@@ -1,8 +1,8 @@
 package com.proxy.forge.controller;
 
 import com.proxy.forge.api.pojo.*;
+import com.proxy.forge.dto.GlobalSettings;
 import com.proxy.forge.service.*;
-import com.proxy.forge.service.impl.ApiKeysServiceImpl;
 import com.proxy.forge.tools.CertificateManagement;
 import com.proxy.forge.tools.DNSUtils;
 import com.proxy.forge.tools.GlobalStaticVariable;

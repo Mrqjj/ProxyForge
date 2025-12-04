@@ -2,7 +2,7 @@ package com.proxy.forge.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.proxy.forge.api.pojo.GlobalSettings;
+import com.proxy.forge.dto.GlobalSettings;
 import com.proxy.forge.service.GlobalSettingService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;

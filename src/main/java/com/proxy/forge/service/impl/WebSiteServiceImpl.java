@@ -169,7 +169,7 @@ public class WebSiteServiceImpl implements WebSiteService {
             }
         }
         if (StringUtils.isBlank(websiteStr)) {
-            log.info("[获取站点配置]:  请求主机名: [{}]", serverName);
+            log.info("[获取站点配置]:  请求主机名: [{}], 没有找到站点配置, 返回到全局跳转页面", serverName);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseApi(403, "error", "data error"));
         }
         // 读取站点的配置文件

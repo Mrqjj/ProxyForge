@@ -92,12 +92,14 @@ public class UndertowDynamicSslConfig {
         Date now = new Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         long remainDays = (cert.getNotAfter().getTime() - now.getTime()) / 1000 / 3600 / 24;
+        System.out.println("🌬️💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨");
         System.out.println("📜 证书信息: " + name);
         System.out.println("   生效日期: " + sdf.format(cert.getNotBefore()));
         System.out.println("   过期日期: " + sdf.format(cert.getNotAfter()));
         System.out.println("   剩余天数: " + remainDays);
         System.out.println("📡 请求域名: " + domain);
         System.out.println("☃️   Alias: " + alias);
+        System.out.println("🌬️💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨💨");
         if (remainDays <= 10) {
             // 这里应该推送任务, 开始申请证书
             System.err.println("⚠️ 警告：证书将在 " + remainDays + " 天后过期: " + name);

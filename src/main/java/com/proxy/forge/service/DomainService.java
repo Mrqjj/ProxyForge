@@ -2,8 +2,10 @@ package com.proxy.forge.service;
 
 import com.proxy.forge.api.pojo.SaveDomain;
 import com.proxy.forge.api.pojo.SearchDomain;
+import com.proxy.forge.dto.Domain;
 
 import java.io.FileNotFoundException;
+import java.util.List;
 
 /**
  *

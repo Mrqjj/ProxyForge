@@ -47,6 +47,8 @@ public class Domain implements Serializable {
     @Column(name = "cert_exp_time", columnDefinition = "datetime comment '证书过期时间'")
     private LocalDateTime certExpTime;
 
+    @Column(name = "method", columnDefinition = "varchar(255) comment '证书申请方式 DNS/HTTP'")
+    private String method;
     //添加时间
     @Column(name = "create_time", columnDefinition = "datetime comment '添加时间'")
     private LocalDateTime createTime;

@@ -1,10 +1,9 @@
 package com.proxy.forge.service.impl;
 
 import com.alibaba.fastjson2.JSONObject;
-import com.google.common.net.InternetDomainName;
 import com.proxy.forge.api.pojo.CheckDeviceInfo;
 import com.proxy.forge.api.pojo.FingerprintAnalysisReuslt;
-import com.proxy.forge.api.pojo.GlobalSettings;
+import com.proxy.forge.dto.GlobalSettings;
 import com.proxy.forge.dto.ClientLogs;
 import com.proxy.forge.dto.GlobalReplace;
 import com.proxy.forge.dto.WebSite;
@@ -21,7 +20,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
-import org.apache.http.entity.ContentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -37,8 +35,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.UUID;
-
-import static com.proxy.forge.tools.GlobalStaticVariable.REDIS_WEBSITE_CACHE_KEY;
 
 /**
  *
@@ -154,7 +150,7 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                     "POST",
                     str,
                     "客户端环境检查,IP检查. 通过。白名单ip: [ " + (whiteListService.isExistsWhiteList(clientIp) ? "是" : "否") + " ]",
-                    RandomUSIp.randomPublicIPv4(),
+                    clientIp,
                     serverName,
                     webSite.getId()
             ));
@@ -193,7 +189,7 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         }
 
         // 这里应该 回调插件 准备请求目标站点第一个页面前的回调。 需要传入 tk 用户终端唯一标识,
-        // serverName 当前客户端请求的主机名,clientIp 客户端ip，proxyStr 代理信息
+        // serverName 当前客户端请求的主机名,clientIp 客户端ip, 全局配置，站点配置
         return ResponseEntity.status(HttpStatus.FOUND)
                 .header("Location", "/index")
                 .build();
@@ -301,7 +297,7 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                 request.getMethod(),
                 request.getMethod().equalsIgnoreCase("POST") ? StreamUtils.copyToString(request.getInputStream(), StandardCharsets.UTF_8) : "",
                 "发送请求到目标地址: " + url,
-                RandomUSIp.randomPublicIPv4(),
+                clientIp,
                 serverName,
                 webSite.getId()
         ));
