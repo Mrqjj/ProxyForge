@@ -6,7 +6,7 @@ on:
   workflow_dispatch:      # 手动触发同步
 
 env:
-  GITEE_REPO: "https://gitee.com/mr_qjj/proxy-forge.git"  # Gitee 仓库地址
+  GITEE_REPO: "gitee.com/mr_qjj/proxy-forge.git"  # Gitee 仓库地址
   PROJECT_NAME: "proxy-forge"                             # 项目名字
   SYNC_BRANCH: "master"                                   # 要同步的分支
 
