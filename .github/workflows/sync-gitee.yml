@@ -1,30 +1,40 @@
 name: Sync from Gitee
 
 on:
-  workflow_dispatch: # 支持手动触发，也可以被 webhook 调用
+  push:           # 可选，用于测试触发
+    branches:
+      - master
+  workflow_dispatch: # 支持手动触发
 
 jobs:
   sync:
     runs-on: ubuntu-latest
 
     steps:
-      # 检出 GitHub 仓库
+      # 1. 检出 GitHub 仓库
       - name: Checkout GitHub repo
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # 获取完整历史
 
-      # 拉取 Gitee 仓库（public 仓库无需 SSH）
-      - name: Pull from Gitee
+      # 2. 拉取 Gitee 仓库（public 仓库无需 SSH）
+      - name: Fetch Gitee repo
         run: |
           git remote add gitee https://gitee.com/mr_qjj/proxy-forge.git || echo "remote exists"
-          git fetch gitee
+          git fetch gitee master
 
-      # 合并 Gitee 的 develop 分支
-      - name: Merge Gitee into GitHub
+      # 3. 合并 Gitee master 分支
+      - name: Merge Gitee master into GitHub master
         run: |
-          git checkout develop
-          git merge gitee/develop --allow-unrelated-histories -m "Sync from Gitee"
+          git checkout master
+          git merge gitee/master --allow-unrelated-histories -m "Sync from Gitee"
 
-      # 推送到 GitHub
+      # 4. 推送到 GitHub
       - name: Push to GitHub
         run: |
-          git push origin develop
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://$PAT_TOKEN@github.com/<GitHub用户名>/<仓库名>.git
+          git push origin master
+        env:
+          PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
