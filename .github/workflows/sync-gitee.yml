@@ -12,10 +12,12 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
+      # 使用 GitHub PAT 来 checkout，而不是默认 bot
       - name: Checkout GitHub
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}   # ★★ 必须加这个 ★★
 
       - name: Configure Git
         run: |
