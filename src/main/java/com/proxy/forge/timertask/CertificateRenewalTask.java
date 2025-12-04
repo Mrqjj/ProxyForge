@@ -45,7 +45,7 @@ public class CertificateRenewalTask {
     @Autowired
     StringRedisTemplate stringRedisTemplate;
 
-    @Scheduled(cron = "30 30 * * * ?")
+    @Scheduled(cron = "0 0 2 * * ?")
     public void startTask() throws Exception {
         GlobalSettings globalSetting = globalSettingService.getGlobalSetting();
         if (globalSetting.getAutoRenew()) {
