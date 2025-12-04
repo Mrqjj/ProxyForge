@@ -1,0 +1,31 @@
+name: Sync from Gitee
+
+on:
+  schedule:
+    # 每天凌晨 2 点执行（UTC 时间，UTC = 北京时间 -8）
+    - cron: '30 * * * *' 
+  workflow_dispatch: # 手动触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.8.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add Gitee remote
+        run: |
+          git remote add gitee git@gitee.com:mr_qjj/proxy-forge.git
+          git fetch gitee
+
+      - name: Merge & Push
+        run: |
+          git checkout develop
+          git merge gitee/develop --allow-unrelated-histories -m "Sync from Gitee"
+          git push origin develop
