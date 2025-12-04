@@ -29,7 +29,6 @@ public class ExpCert {
         keyStore.load(new FileInputStream(p12Path), password.toCharArray());
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
         for (String alias : Collections.list(keyStore.aliases())) {
             X509Certificate cert = (X509Certificate) keyStore.getCertificate(alias);
             if (cert != null) {
