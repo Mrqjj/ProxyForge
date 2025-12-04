@@ -6,6 +6,7 @@ import com.proxy.forge.service.impl.InitServiceImpl;
 import com.proxy.forge.service.impl.UserServiceImpl;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -25,7 +26,7 @@ import java.util.TimeZone;
  **/
 @EnableScheduling
 @EnableAsync
-@SpringBootApplication
+@SpringBootApplication(exclude = {ErrorMvcAutoConfiguration.class})
 public class ProxyForgeApplication {
 
 

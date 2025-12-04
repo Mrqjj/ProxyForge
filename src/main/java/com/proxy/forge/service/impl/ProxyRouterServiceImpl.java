@@ -32,9 +32,7 @@ import org.springframework.util.StreamUtils;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.UUID;
+import java.util.*;
 
 /**
  *
@@ -54,6 +52,11 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
 
     @Autowired
     private ResourceLoader resourceLoader;
+
+    // 注入所有实现类。
+    @Autowired(required = false)
+    private List<CallBackService> callBackServices = new ArrayList<>();
+    ;
 
     @Autowired
     GlobalReplaceService globalReplaceService;
@@ -181,15 +184,25 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         // 客户端IP
         String clientIp = request.getRemoteAddr();
         Object webSiteObj = webSiteService.getWebSiteConfig(serverName);
-        WebSite webSite;
+        WebSite webSiteConfig;
         if (webSiteObj instanceof WebSite) {
-            webSite = (WebSite) webSiteObj;
+            webSiteConfig = (WebSite) webSiteObj;
         } else {
             return webSiteObj;
         }
-
+        // 调用所有接口实现.
+        for (CallBackService callBackService : callBackServices) {
+            Object result = callBackService.beforeFirstPageRequest(JwtUtils.parse(tk).getSubject(), serverName, clientIp, webSiteConfig, request, response);
+            if (result != null) {
+                return result;
+            }
+        }
         // 这里应该 回调插件 准备请求目标站点第一个页面前的回调。 需要传入 tk 用户终端唯一标识,
         // serverName 当前客户端请求的主机名,clientIp 客户端ip, 全局配置，站点配置
+        // 访问目标主页必须使用 /index  可以在 beforeFirstPageRequest 内修改响应，
+        // return ResponseEntity.status(HttpStatus.FOUND)
+        //                .header("Location", "/xx/xxxxxxxxx/xxxxxxxxxxxxxxxxxxxxxxxx")
+        //                .build();
         return ResponseEntity.status(HttpStatus.FOUND)
                 .header("Location", "/index")
                 .build();
@@ -276,17 +289,17 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         Object webSiteObj = webSiteService.getWebSiteConfig(serverName);
         // 客户端唯一标识
         String token = JwtUtils.parse(tk).getSubject();
-        WebSite webSite;
+        WebSite webSiteConfig;
         if (webSiteObj instanceof WebSite) {
-            webSite = (WebSite) webSiteObj;
+            webSiteConfig = (WebSite) webSiteObj;
         } else {
             return webSiteObj;
         }
         String url;
         if (StringUtils.isNotBlank(queryString)) {
-            url = webSite.getTargetUrl() + path + "?" + queryString;
+            url = webSiteConfig.getTargetUrl() + path + "?" + queryString;
         } else {
-            url = webSite.getTargetUrl() + path;
+            url = webSiteConfig.getTargetUrl() + path;
         }
 
         // 写入日志
@@ -299,22 +312,50 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                 "发送请求到目标地址: " + url,
                 clientIp,
                 serverName,
-                webSite.getId()
+                webSiteConfig.getId()
         ));
 
 
         HashMap<String, Object> header = generateHader(request);
         byte[] res;
+        StringBuilder proxyStr = new StringBuilder(); // 初始为空
         if (request.getMethod().equalsIgnoreCase("POST")) {
             String body = StreamUtils.copyToString(request.getInputStream(), StandardCharsets.UTF_8);
-            res = HttpUtils.sendPostRequest(url, body, header, null);
+            // 调用所有接口实现.
+            for (CallBackService callBackService : callBackServices) {
+                Object result = callBackService.requestBefore(token, serverName,
+                        clientIp, webSiteConfig, request, response, body,
+                        header, url, proxyStr);
+                if (result != null) {
+                    return result;
+                }
+            }
+            res = HttpUtils.sendPostRequest(url, body, header, proxyStr.isEmpty() ? null : proxyStr.toString());
         } else if (request.getMethod().equalsIgnoreCase("GET")) {
-            res = HttpUtils.sendGetRequest(url, header, null);
+            // 调用所有接口实现.
+            for (CallBackService callBackService : callBackServices) {
+                Object result = callBackService.requestBefore(token, serverName,
+                        clientIp, webSiteConfig, request, response, null,
+                        header, url, proxyStr);
+                if (result != null) {
+                    return result;
+                }
+            }
+            res = HttpUtils.sendGetRequest(url, header, proxyStr.isEmpty() ? null : proxyStr.toString());
         } else {
             res = new byte[0];
         }
         HttpResponse httpResponse = (HttpResponse) header.get("response");
         generateResponHeader(httpResponse, response);
+        // 调用所有接口实现.
+        for (CallBackService callBackService : callBackServices) {
+            Object result = callBackService.requestAfter(token, serverName,
+                    clientIp, webSiteConfig, request, response,
+                    httpResponse, url, res);
+            if (result != null) {
+                return result;
+            }
+        }
         return ResponseEntity.status(HttpStatus.valueOf(httpResponse.getStatusLine().getStatusCode()))
                 .body(res);
     }
