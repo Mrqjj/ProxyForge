@@ -12,6 +12,11 @@ ProxyForge is an intelligent reverse proxy gateway (mirror site) system based on
 
 **Goal**: Build a Java technology stack reverse proxy gateway (mirror) with "Automatic HTTPS + Content Rewriting + Plugin Extension + Backend Configuration", which can run as a single JAR file and also supports K8s elastic scaling. Can also be compiled into executable files for target platforms.
 
+### Background system
+
+[CLICK ME TO DOWNLOAD](https://github.com/Mrqjj/ProxyForge/releases/tag/releases)
+
+
 ## ✨ Core Features
 
 ### 🔒 Automatic HTTPS Certificate Management

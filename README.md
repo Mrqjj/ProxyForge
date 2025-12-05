@@ -14,6 +14,12 @@ ProxyForge 是一款基于 Java 技术栈的智能反向代理网关（镜像站
 
 **目标**：打造一款「自动 HTTPS + 内容改写 + 插件扩展 + 后台配置」的 Java 技术栈反向代理网关(镜像)，单 jar 即可运行，亦可 K8s 弹性伸缩。也可编译目标平台可执行文件运行。
 
+
+### 管理端请移步下载
+
+[点我下载](https://github.com/Mrqjj/ProxyForge/releases/tag/releases)
+
+
 ## ✨ 核心功能
 
 ### 🔒 自动 HTTPS 证书管理
