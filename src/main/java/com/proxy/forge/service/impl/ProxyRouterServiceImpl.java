@@ -236,13 +236,9 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         String path = request.getRequestURI();
 
         Resource resource;
-        if (path.equalsIgnoreCase("/admin")) {
-            return ResponseEntity.status(HttpStatus.FOUND).header("Location", "/admin/").build();
-        } else if (path.equalsIgnoreCase("/")) {
+        if (path.equalsIgnoreCase("/")) {
             resource = resourceLoader.getResource("classpath:/static/index.html");
-        } else if (path.equalsIgnoreCase("/admin/")) {
-            resource = resourceLoader.getResource("classpath:/static" + path + "index.html");
-        } else {
+        }  else {
             resource = resourceLoader.getResource("classpath:/static" + path);
         }
         // 如果访问的文件 本地存在，则返回本地内容
