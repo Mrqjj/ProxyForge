@@ -230,12 +230,10 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
             return ResponseEntity.ok().contentType(MediaType.valueOf(globalReplace.getContentType()))
                     .body(globalReplace.getResponseContent());
         }
-
         //读取全局配置
         GlobalSettings globalSettings = JSONObject.parseObject(stringRedisTemplate.opsForValue().get("globalSettings"), GlobalSettings.class);
         //请求路径
         String path = request.getRequestURI();
-
         Resource resource;
         if (path.equalsIgnoreCase("/")) {
             resource = resourceLoader.getResource("classpath:/static/index.html");
@@ -283,16 +281,17 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         String serverName = request.getServerName();
         // 客户端IP
         String clientIp = request.getRemoteAddr();
-        // 获取网站配置
-        Object webSiteObj = webSiteService.getWebSiteConfig(serverName);
         // 客户端唯一标识
         String token = JwtUtils.parse(tk).getSubject();
+        // 获取网站配置
+        Object webSiteObj = webSiteService.getWebSiteConfig(serverName);
         WebSite webSiteConfig;
         if (webSiteObj instanceof WebSite) {
             webSiteConfig = (WebSite) webSiteObj;
         } else {
             return webSiteObj;
         }
+        // 组装完整的请求地址.
         String url;
         if (StringUtils.isNotBlank(queryString)) {
             url = webSiteConfig.getTargetUrl() + path + "?" + queryString;
