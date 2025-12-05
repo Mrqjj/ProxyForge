@@ -180,6 +180,7 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
             return ResponseEntity.status(HttpStatus.FOUND)
                     .header("Location", "/").build();
         }
+        String token = JwtUtils.parse(tk).getSubject();
         // 获取主机名.
         String serverName = request.getServerName();
         // 客户端IP
@@ -193,7 +194,7 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         }
         // 调用所有接口实现.
         for (CallBackService callBackService : callBackServices) {
-            Object result = callBackService.beforeFirstPageRequest(JwtUtils.parse(tk).getSubject(), serverName, clientIp, webSiteConfig, request, response);
+            Object result = callBackService.beforeFirstPageRequest(token, serverName, clientIp, webSiteConfig, request, response);
             if (result != null) {
                 return result;
             }
@@ -238,7 +239,7 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         Resource resource;
         if (path.equalsIgnoreCase("/")) {
             resource = resourceLoader.getResource("classpath:/static/index.html");
-        }  else {
+        } else {
             resource = resourceLoader.getResource("classpath:/static" + path);
         }
         // 如果访问的文件 本地存在，则返回本地内容
