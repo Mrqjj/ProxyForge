@@ -92,7 +92,7 @@ ProxyForge is an intelligent reverse proxy gateway (mirror site) system based on
 - JDK 17 or higher
 - Maven 3.6+
 - MySQL 8.0+
-- Redis 6.0+
+- Redis 6.0+    Persistence is required
 
 ### 1. Clone Project
 ```bash

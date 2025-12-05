@@ -94,7 +94,7 @@ ProxyForge 是一款基于 Java 技术栈的智能反向代理网关（镜像站
 - JDK 17 或更高版本
 - Maven 3.6+
 - MySQL 8.0+
-- Redis 6.0+
+- Redis 6.0+   需要配置持久化
 
 ### 1. 克隆项目
 ```bash
