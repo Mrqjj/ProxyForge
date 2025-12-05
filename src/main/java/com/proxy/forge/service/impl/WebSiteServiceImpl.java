@@ -175,4 +175,22 @@ public class WebSiteServiceImpl implements WebSiteService {
         // 读取站点的配置文件
         return JSONObject.parseObject(websiteStr, WebSite.class);
     }
+
+    /**
+     * 初始化所有网站的配置信息。
+     *
+     * @return 返回一个对象，表示初始化操作的结果。在当前实现中总是返回null。
+     */
+    @Override
+    public int initAllWebSiteConfig() {
+        List<WebSite> webSites = webSiteRepository.findAll();
+        int success = 0;
+        for (WebSite webSite : webSites) {
+            if (webSite.getStatus().equalsIgnoreCase("running")) {
+                stringRedisTemplate.opsForValue().set(REDIS_WEBSITE_CACHE_KEY + webSite.getDomain(), JSONObject.toJSONString(webSite));
+                success += 1;
+            }
+        }
+        return success;
+    }
 }

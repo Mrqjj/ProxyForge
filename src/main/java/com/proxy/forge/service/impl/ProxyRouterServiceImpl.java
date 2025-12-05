@@ -116,7 +116,8 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
             } else {
                 return webSiteObj;
             }
-
+            // 客户端全局唯一标识。
+            String token = JwtUtils.parse(tk).getSubject();
             ClientFingerprint clientFingerprint = JSONObject.parseObject(str, ClientFingerprint.class);
             // TODO:这里防红。
             // 白名单IP 直接放行不做策略检查
@@ -126,10 +127,10 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                 GlobalSettings globalSettings = JSONObject.parseObject(stringRedisTemplate.opsForValue().get("globalSettings"), GlobalSettings.class);
                 FingerprintAnalysisReuslt fingerprintAnalysisReuslt = fingerprintAnalysisUtil.analyze(serverName, clientFingerprint, clientIp, globalSettings);
                 if (!fingerprintAnalysisReuslt.isResult()) {
-                    log.info("[终端检查 策略不通过] , 拒绝执行. 终端唯一标识: [{}] 终端IP: [{}], 主机名: [{}], 策略: {}", tk, clientIp, serverName, fingerprintAnalysisReuslt.getMessage());
+                    log.info("[终端检查 策略不通过] , 拒绝执行. 终端唯一标识: [{}] 终端IP: [{}], 主机名: [{}], 策略: {}", token, clientIp, serverName, fingerprintAnalysisReuslt.getMessage());
                     // 写入日志
                     clientLogsService.saveClientLogs(new ClientLogs(
-                            JwtUtils.parse(tk).getSubject(),
+                            token,
                             "[❌❌❌ 终端检查拒绝]",
                             "/check",
                             "POST",
@@ -142,12 +143,12 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseApi(403, "error", "Strategy check failed!"));
                 }
             } else {
-                log.info("[终端检查] , 终端唯一标识: [{}], 终端IP: [{}], 主机名: [{}], 存在白名单,不拦截", tk, clientIp, serverName);
+                log.info("[终端检查] , 终端唯一标识: [{}], 终端IP: [{}], 主机名: [{}], 存在白名单,不拦截", token, clientIp, serverName);
             }
 
             // 写入日志
             clientLogsService.saveClientLogs(new ClientLogs(
-                    JwtUtils.parse(tk).getSubject(),
+                    token,
                     "[✅✅✅ 终端检查通过]",
                     "/check",
                     "POST",

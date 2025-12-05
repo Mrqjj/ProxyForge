@@ -61,4 +61,11 @@ public interface WebSiteService {
      * @return 返回一个对象，表示所查询到的网站配置信息。具体返回对象的类型和结构取决于实现逻辑
      */
     Object getWebSiteConfig(String serverName);
+
+    /**
+     * 初始化网站配置。
+     *
+     * @return 返回初始化成功数量。
+     */
+    int initAllWebSiteConfig();
 }
