@@ -56,7 +56,6 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
     // 注入所有实现类。
     @Autowired(required = false)
     private List<CallBackService> callBackServices = new ArrayList<>();
-    ;
 
     @Autowired
     GlobalReplaceService globalReplaceService;
@@ -132,7 +131,7 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                     clientLogsService.saveClientLogs(new ClientLogs(
                             token,
                             "[❌❌❌ 终端检查拒绝]",
-                            "/check",
+                            request.getRequestURI(),
                             "POST",
                             str,
                             "客户端环境检查 不通过, 原因: " + fingerprintAnalysisReuslt.getMessage(),
@@ -150,7 +149,7 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
             clientLogsService.saveClientLogs(new ClientLogs(
                     token,
                     "[✅✅✅ 终端检查通过]",
-                    "/check",
+                    request.getRequestURI(),
                     "POST",
                     str,
                     "客户端环境检查,IP检查. 通过。白名单ip: [ " + (whiteListService.isExistsWhiteList(clientIp) ? "是" : "否") + " ]",
@@ -272,17 +271,13 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                     .header("Location", "/").build();
         }
 
-        // 查询字符串
+        // 检查,是上一步转发的 /index  表示请求目标主页,不带后缀。
         String queryString = request.getQueryString();
         if (path.equalsIgnoreCase("/index") && StringUtils.isBlank(queryString)) {
             path = "/";
         }
         // 获取主机名.
         String serverName = request.getServerName();
-        // 客户端IP
-        String clientIp = request.getRemoteAddr();
-        // 客户端唯一标识
-        String token = JwtUtils.parse(tk).getSubject();
         // 获取网站配置
         Object webSiteObj = webSiteService.getWebSiteConfig(serverName);
         WebSite webSiteConfig;
@@ -291,13 +286,14 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         } else {
             return webSiteObj;
         }
+        // 客户端IP
+        String clientIp = request.getRemoteAddr();
+        // 客户端唯一标识
+        String token = JwtUtils.parse(tk).getSubject();
+
         // 组装完整的请求地址.
-        String url;
-        if (StringUtils.isNotBlank(queryString)) {
-            url = webSiteConfig.getTargetUrl() + path + "?" + queryString;
-        } else {
-            url = webSiteConfig.getTargetUrl() + path;
-        }
+        String url = webSiteConfig.getTargetUrl() + path +
+                (StringUtils.isNotBlank(queryString) ? "?" + queryString : "");
 
         // 写入日志
         clientLogsService.saveClientLogs(new ClientLogs(
