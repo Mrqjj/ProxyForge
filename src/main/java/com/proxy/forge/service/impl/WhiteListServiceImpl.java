@@ -72,6 +72,6 @@ public class WhiteListServiceImpl implements WhiteListService {
      */
     @Override
     public boolean isExistsWhiteList(String ip) {
-        return redis.opsForValue().get(PREFIX + ip) == null;
+        return redis.opsForValue().get(PREFIX + ip) != null;
     }
 }
