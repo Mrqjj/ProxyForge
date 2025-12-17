@@ -139,7 +139,7 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                             serverName,
                             webSite.getId()
                     ));
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseApi(403, "error", "Strategy check failed!"));
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new ResponseApi(403, "error", "Strategy check failed!" + fingerprintAnalysisReuslt.getMessage()));
                 }
             } else {
                 log.info("[终端检查] , 终端唯一标识: [{}], 终端IP: [{}], 主机名: [{}], 存在白名单,不拦截", token, clientIp, serverName);
