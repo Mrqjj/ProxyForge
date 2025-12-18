@@ -26,6 +26,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
@@ -242,17 +243,9 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         // 如果访问的文件 本地存在，则返回本地内容
         if (resource.exists()) {
             String fileName = resource.getFilename() ;
-            MediaType mediaType = switch (fileName.substring(fileName.lastIndexOf(".") + 1)) {
-                case "html" -> MediaType.TEXT_HTML;
-                case "css" -> MediaType.valueOf("text/css");
-                case "js" -> MediaType.valueOf("application/javascript");
-                case "json" -> MediaType.APPLICATION_JSON;
-                case "png" -> MediaType.IMAGE_PNG;
-                case "jpg", "jpeg" -> MediaType.IMAGE_JPEG;
-                case "gif" -> MediaType.IMAGE_GIF;
-                case "svg" -> MediaType.valueOf("image/svg+xml");
-                default -> MediaType.APPLICATION_OCTET_STREAM;
-            };
+            MediaType mediaType = MediaTypeFactory
+                    .getMediaType(resource)
+                    .orElse(MediaType.APPLICATION_OCTET_STREAM);
             byte[] bytes = resource.getInputStream().readAllBytes();
             if (fileName.equalsIgnoreCase("index.html")) {
                 String fileText = new String(bytes, StandardCharsets.UTF_8);
