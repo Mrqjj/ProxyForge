@@ -241,7 +241,7 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         }
         // 如果访问的文件 本地存在，则返回本地内容
         if (resource.exists()) {
-            String fileName = resource.getFile().getName();
+            String fileName = resource.getFilename() ;
             MediaType mediaType = switch (fileName.substring(fileName.lastIndexOf(".") + 1)) {
                 case "html" -> MediaType.TEXT_HTML;
                 case "css" -> MediaType.valueOf("text/css");
