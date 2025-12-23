@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  *
  * <p>ProjectName: proxy-forge</p>
@@ -42,4 +44,13 @@ public interface WebSiteReplaceRepository extends JpaRepository<WebSiteReplace,I
             "w.status= COALESCE(:#{#web.status},w.status)" +
             "where w.id=:#{#web.id}")
     int updateById(@Param("web") WebSiteReplace webSiteReplace);
+
+    /**
+     * 根据给定的ID查询Web站点替换配置。
+     *
+     * @param id 要查询的Web站点替换配置的唯一标识符
+     * @return 与指定ID关联的WebSiteReplace对象，如果未找到则返回null
+     */
+    @Query(value = "select w from WebSiteReplace w where w.id=:id")
+    WebSiteReplace queryWebSiteReplaceById(@Param("id") Integer id);
 }

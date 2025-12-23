@@ -112,6 +112,10 @@ public class WebSiteReplaceServiceImpl implements WebSiteReplaceService {
      */
     @Override
     public Object deleteCustomContent(DeleteCustomContent deleteCustomContent, HttpServletRequest request, HttpServletResponse response) {
+        WebSiteReplace webSiteReplace = webSiteReplaceRepository.queryWebSiteReplaceById(deleteCustomContent.getId());
+        if (webSiteReplace != null){
+            stringRedisTemplate.delete(GlobalStaticVariable.WEBSITE_REPLACE_CONTENT_KEY + webSiteReplace.getWebSiteHost() + webSiteReplace.getUrlPath());
+        }
         webSiteReplaceRepository.deleteById(deleteCustomContent.getId());
         return new ResponseApi(200, "success", null);
     }
