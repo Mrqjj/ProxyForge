@@ -54,6 +54,6 @@ public class WebSiteReplace {
     private Boolean status;
 
     // 添加时间
-    @Column(name = "add_time", columnDefinition = "datetime default CURRENT_TIMESTAMP '添加时间'")
+    @Column(name = "add_time", columnDefinition = "datetime default CURRENT_TIMESTAMP comment '添加时间'")
     private LocalDateTime addTime;
 }
