@@ -14,8 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -53,6 +56,9 @@ public class ManagerController {
     WhiteListService whiteListService;
     @Autowired
     ClientLogsService clientLogsService;
+
+    @Autowired
+    WebSiteReplaceService webSiteReplaceService;
 
     @RequestMapping(value = "/login")
     Object login(@RequestBody @Validated UserLogin userLogin, HttpServletRequest request, HttpServletResponse response) {
@@ -385,6 +391,7 @@ public class ManagerController {
     Object logGeoCountry(@RequestBody @Validated GeoCountry geoCountry, HttpServletRequest request, HttpServletResponse response) {
         return clientLogsService.logGeoCountry(geoCountry);
     }
+
     @RequestMapping(value = "/geoCity")
     Object logGeoCity(@RequestBody @Validated GeoCountry geoCountry, HttpServletRequest request, HttpServletResponse response) {
         return clientLogsService.logGeoCity(geoCountry);
@@ -394,8 +401,8 @@ public class ManagerController {
      * 根据提供的地理国家信息检索指定域名的统计数据。
      *
      * @param geoCountry 地理国家信息，必须验证。该参数用于过滤领域统计量。
-     * @param request 包含客户端请求的 HttpServletRequest 对象。
-     * @param response 用于将响应返回客户端的 HttpServletResponse 对象。
+     * @param request    包含客户端请求的 HttpServletRequest 对象。
+     * @param response   用于将响应返回客户端的 HttpServletResponse 对象。
      * @return 包含与域名相关的统计数据的对象，按所给地理国家进行筛选。该对象的具体结构取决于实现方式
      * 以及领域统计的具体要求。
      */
@@ -404,12 +411,12 @@ public class ManagerController {
         return clientLogsService.domainStats(geoCountry);
     }
 
-/**
+    /**
      * 检索所提供地理国家的趋势统计数据。
      *
      * @param geoCountry 用于获取趋势统计的地理国家。该参数应为有效的GeoCountry对象。
-     * @param request 包含客户端对服务组请求的 HttpServletRequest 对象。
-     * @param response HttpServletResponse 对象，将响应返回客户端。
+     * @param request    包含客户端对服务组请求的 HttpServletRequest 对象。
+     * @param response   HttpServletResponse 对象，将响应返回客户端。
      * @return 包含指定地理国家趋势统计的对象。该对象的具体结构和内容取决于clientLogsService.trendStats方法的实现
      * .
      */
@@ -419,5 +426,56 @@ public class ManagerController {
     }
 
 
+    /**
+     * 处理文件上传请求。
+     *
+     * @param file，作为多部分文件传递
+     * @param request        HttpServletRequest 对象
+     * @param response       HttpServletResponse 对象，用于将响应返回客户端
+     * @return 表示文件上传作结果的对象
+     * 如果文件上传过程中发生I/O错误，则@throws IOException
+     */
+    @RequestMapping(value = "/uploadFile")
+    Object uploadFile(@RequestParam("file") MultipartFile file, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        return websiteService.uploadFile(file, request, response);
+    }
 
+    /**
+     * 处理基于所提供参数检索自定义内容列表的请求。
+     *
+     * @param customContent 包含内容列表条件的自定义内容对象。
+     * @param request       HttpServletRequest 对象，代表客户端的请求。
+     * @param response      HttpServletResponse 对象用于将响应返回客户端。
+     * @return 表示作结果的对象，通常是自定义内容列表或响应消息。
+     */
+    @RequestMapping(value = "/customContentList")
+    Object customContentList(@RequestBody QueryCustomContent customContent, HttpServletRequest request, HttpServletResponse response) {
+        return webSiteReplaceService.webSiteReplaceList(customContent, request, response);
+    }
+
+    /**
+     * 将自定义内容保存到网站。
+     *
+     * @param saveCustomContent 是包含待保存自定义内容的对象
+     * @param request           HttpServletRequest 对象
+     * @param response          HttpServletResponse 对象
+     * @return 表示作结果的对象，可以是成功消息、错误或任何其他相关信息
+     */
+    @RequestMapping(value = "/saveCustomContent")
+    Object saveCustomContent(@RequestBody SaveCustomContent saveCustomContent, HttpServletRequest request, HttpServletResponse response) {
+        return webSiteReplaceService.saveCustomContent(saveCustomContent, request, response);
+    }
+
+    /**
+     * 删除网站中的自定义内容。
+     *
+     * @param deleteCustomContent 包含待删除自定义内容细节的请求体
+     * @param request 代表客户端请求的 HttpServletRequest 对象
+     * @param response 将响应发送回客户端的 HttpServletResponse 对象
+     * @return 一个表示删除作结果的对象
+     */
+    @RequestMapping(value = "/deleteCustomContent")
+    Object deleteCustomContent(@RequestBody DeleteCustomContent deleteCustomContent, HttpServletRequest request, HttpServletResponse response) {
+        return webSiteReplaceService.deleteCustomContent(deleteCustomContent, request, response);
+    }
 }

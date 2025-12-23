@@ -1,12 +1,10 @@
 package com.proxy.forge.service.impl;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.google.common.net.InternetDomainName;
 import com.proxy.forge.api.pojo.CheckDeviceInfo;
 import com.proxy.forge.api.pojo.FingerprintAnalysisReuslt;
-import com.proxy.forge.dto.GlobalSettings;
-import com.proxy.forge.dto.ClientLogs;
-import com.proxy.forge.dto.GlobalReplace;
-import com.proxy.forge.dto.WebSite;
+import com.proxy.forge.dto.*;
 import com.proxy.forge.service.*;
 import com.proxy.forge.tools.*;
 import com.proxy.forge.vo.fingerprint.ClientFingerprint;
@@ -21,17 +19,17 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.MediaTypeFactory;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 
+import java.io.File;
 import java.io.InputStream;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -69,7 +67,9 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
     @Autowired
     ClientLogsService clientLogsService;
     @Autowired
-    private WebSiteService webSiteService;
+    WebSiteService webSiteService;
+    @Autowired
+    WebSiteReplaceService webSiteReplaceService;
 
     /**
      * 检查传入的 HttpServletRequest 和 HttpServletResponse，并执行必要的验证或处理。
@@ -242,7 +242,7 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         }
         // 如果访问的文件 本地存在，则返回本地内容
         if (resource.exists()) {
-            String fileName = resource.getFilename() ;
+            String fileName = resource.getFilename();
             MediaType mediaType = MediaTypeFactory
                     .getMediaType(resource)
                     .orElse(MediaType.APPLICATION_OCTET_STREAM);
@@ -283,6 +283,62 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
         String clientIp = request.getRemoteAddr();
         // 客户端唯一标识
         String token = JwtUtils.parse(tk).getSubject();
+
+        /* 查询数据库是否有匹配的自定义内容.  开始 Redis*/
+        String replace = stringRedisTemplate.opsForValue().get(GlobalStaticVariable.WEBSITE_REPLACE_CONTENT_KEY + serverName + path);
+        if (StringUtils.isBlank(replace)) {
+            // 读取泛解析的域名配置
+            InternetDomainName idn = InternetDomainName.from(serverName);
+            if (idn.isUnderPublicSuffix()) {
+                replace = stringRedisTemplate.opsForValue().get(GlobalStaticVariable.WEBSITE_REPLACE_CONTENT_KEY + "*." + idn.topPrivateDomain() + path);
+            }
+        }
+        // 如果取到配置
+        if (StringUtils.isNotBlank(replace)) {
+            WebSiteReplace websiteReplace = JSONObject.parseObject(replace, WebSiteReplace.class);
+            if (websiteReplace.getStatus() && websiteReplace.getDownload()) {
+                // 写入日志
+                clientLogsService.saveClientLogs(new ClientLogs(
+                        token,
+                        "[📓📓📓 内容替换]",
+                        request.getRequestURI(),
+                        "GET",
+                        "[文件下载]",
+                        "客户端请求 返回自定义内容, 下载文件.[" + websiteReplace.getContent() + "]",
+                        clientIp,
+                        serverName,
+                        0
+                ));
+                File file = new File(websiteReplace.getContent());
+                if (!file.exists()) {
+                    return ResponseEntity.notFound().build();
+                }
+                Resource r = new FileSystemResource(file);
+                return ResponseEntity.ok()
+                        .header(HttpHeaders.CONTENT_DISPOSITION,
+                                "attachment; filename=\"" + URLEncoder.encode(websiteReplace.getFileName(), StandardCharsets.UTF_8) + "\"")
+                        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                        .contentLength(file.length())
+                        .body(r);
+            } else if (websiteReplace.getStatus()) {
+                // 写入日志
+                clientLogsService.saveClientLogs(new ClientLogs(
+                        token,
+                        "[📓📓📓 内容替换]",
+                        request.getRequestURI(),
+                        "GET",
+                        "[自定义内容]",
+                        "客户端请求 返回自定义内容.",
+                        clientIp,
+                        serverName,
+                        0
+                ));
+                return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(websiteReplace.getContentType() + "; charset=UTF-8"))
+                        .body(websiteReplace.getContent());
+            }
+        }
+        /* 查询数据库是否有匹配的自定义内容.  结束 */
 
         // 组装完整的请求地址.
         String url = webSiteConfig.getTargetUrl() + path +

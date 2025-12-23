@@ -5,7 +5,6 @@ import com.google.common.net.InternetDomainName;
 import com.proxy.forge.api.pojo.QueryById;
 import com.proxy.forge.api.pojo.SaveWebSite;
 import com.proxy.forge.api.pojo.SearchWebSite;
-import com.proxy.forge.dto.Domain;
 import com.proxy.forge.dto.WebSite;
 import com.proxy.forge.repository.WebSiteRepository;
 import com.proxy.forge.service.WebSiteService;
@@ -25,11 +24,14 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static com.proxy.forge.tools.GlobalStaticVariable.*;
 
@@ -47,6 +49,8 @@ import static com.proxy.forge.tools.GlobalStaticVariable.*;
 @Slf4j
 @Service
 public class WebSiteServiceImpl implements WebSiteService {
+
+    private static final File UPLOAD_FILE_DIR = new File("./uploads/");
 
     @Autowired
     WebSiteRepository webSiteRepository;
@@ -192,5 +196,55 @@ public class WebSiteServiceImpl implements WebSiteService {
             }
         }
         return success;
+    }
+
+    /**
+     *
+     * @param file     待上传的文件，类型为MultipartFile
+     * @param request  包含客户端数据的Servlet请求
+     * @param response 输出的servlet响应，用于将处理结果返回给客户端
+     * @return
+     */
+    @Override
+    public Object uploadFile(MultipartFile file, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        if (file.isEmpty() || StringUtils.isBlank(file.getOriginalFilename())) {
+            return ResponseEntity.ok().body(
+                    new ResponseApi(201, "文件不能为空", null)
+            );
+        }
+        // 原始文件名
+        String originalFilename = file.getOriginalFilename();
+
+        // 防止路径穿越
+        String safeName = originalFilename.replaceAll("[\\\\/]", "");
+
+        // 唯一标识
+        String unique = UUID.randomUUID().toString().replace("-", "");
+
+        // 新文件名
+        String newFilename = unique + "_" + safeName;
+
+        // 确保目录存在
+        if (!UPLOAD_FILE_DIR.exists()) {
+            UPLOAD_FILE_DIR.mkdirs();
+        }
+        // 最终文件
+        File dest = new File(UPLOAD_FILE_DIR, newFilename);
+        // 写文件（二进制）
+        try (InputStream in = file.getInputStream();
+             OutputStream out = new FileOutputStream(dest)) {
+
+            byte[] buffer = new byte[8192];
+            int len;
+            while ((len = in.read(buffer)) != -1) {
+                out.write(buffer, 0, len);
+            }
+        }
+        JSONObject res = new JSONObject();
+        res.put("size", file.getSize());
+        res.put("path", dest.getAbsolutePath());
+        return ResponseEntity.ok().body(
+                new ResponseApi(200, "文件上传成功.", res)
+        );
     }
 }

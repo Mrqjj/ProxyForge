@@ -23,6 +23,12 @@ public class GlobalStaticVariable {
      * 该常量作为密钥的前缀，确保它们在 Redis 中唯一可识别。
      */
     public static final String REDIS_WEBSITE_LOGS_KEY =  "webSiteLogs:";
+
+    /**
+     * 用于标识在网站内容替换操作中使用的键。
+     * 此常量作为键的前缀，确保它们能够被正确识别和处理。
+     */
+    public static final String WEBSITE_REPLACE_CONTENT_KEY = "websiteReplace:";
     /**
      * 常量，表示API调用成功时的返回消息。
      * 该字符串用于在API响应中指示操作已成功完成。
@@ -44,4 +50,5 @@ public class GlobalStaticVariable {
      * 该字符串用于指示在请求的上下文中没有找到特定网站的详细信息。
      */
     public static final String WEBSITE_DETAIL_NO_EXISTS = "站点详情不存在";
+
 }

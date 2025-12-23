@@ -3,9 +3,11 @@ package com.proxy.forge.service;
 import com.proxy.forge.api.pojo.QueryById;
 import com.proxy.forge.api.pojo.SaveWebSite;
 import com.proxy.forge.api.pojo.SearchWebSite;
-import com.proxy.forge.dto.WebSite;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 /**
  *
@@ -68,4 +70,14 @@ public interface WebSiteService {
      * @return 返回初始化成功数量。
      */
     int initAllWebSiteConfig();
+
+    /**
+     * 上传文件。
+     *
+     * @param file 待上传的文件，类型为MultipartFile
+     * @param request 包含客户端数据的Servlet请求
+     * @param response 输出的servlet响应，用于将处理结果返回给客户端
+     * @return 返回一个对象，表示文件上传的结果。具体返回对象的类型和结构取决于实现逻辑
+     */
+    Object uploadFile(MultipartFile file, HttpServletRequest request, HttpServletResponse response) throws IOException;
 }
