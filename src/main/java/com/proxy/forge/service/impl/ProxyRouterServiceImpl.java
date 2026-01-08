@@ -311,7 +311,7 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                         "客户端请求 返回自定义内容, 下载文件.[" + websiteReplace.getContent() + "]",
                         clientIp,
                         serverName,
-                        0
+                        webSiteConfig.getId()
                 ));
                 File file = new File(websiteReplace.getContent());
                 if (file.getName().startsWith("*.")) {
@@ -353,7 +353,7 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                         "客户端请求 返回自定义内容.",
                         clientIp,
                         serverName,
-                        0
+                        webSiteConfig.getId()
                 ));
                 return ResponseEntity.ok()
                         .contentType(MediaType.parseMediaType(websiteReplace.getContentType() + "; charset=UTF-8"))
