@@ -49,4 +49,10 @@ public interface WebSiteReplaceService {
      * @return 返回一个对象，表示删除操作的结果。具体返回对象的类型和结构取决于实现逻辑
      */
     Object deleteCustomContent(DeleteCustomContent deleteCustomContent, HttpServletRequest request, HttpServletResponse response);
+
+    /**
+     * 初始化 替换规则到redis 并且清空原来的缓存内容
+     * @return
+     */
+    int initAllReplaceConfig();
 }

@@ -31,6 +31,8 @@ public class InitServiceImpl implements InitService {
     GlobalReplaceService globalReplaceService;
     @Autowired
     private WebSiteService webSiteService;
+    @Autowired
+    WebSiteReplaceService webSiteReplaceService;
 
     @Override
     public void init() {
@@ -39,5 +41,6 @@ public class InitServiceImpl implements InitService {
         log.info("[初始化全局配置] 结果: {}", globalSettingService.initGlobalSetting());
         log.info("[初始化全局拦截规则] 结果: {}", globalReplaceService.initGlobalReplace());
         log.info("[初始化所有站点配置] 结果: 成功数量: {}", webSiteService.initAllWebSiteConfig());
+        log.info("[重新初始化所有替换] 结果: {}",webSiteReplaceService.initAllReplaceConfig());
     }
 }

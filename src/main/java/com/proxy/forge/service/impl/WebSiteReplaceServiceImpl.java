@@ -18,10 +18,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.beans.BeanCopier;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -118,5 +121,33 @@ public class WebSiteReplaceServiceImpl implements WebSiteReplaceService {
         }
         webSiteReplaceRepository.deleteById(deleteCustomContent.getId());
         return new ResponseApi(200, "success", null);
+    }
+
+    /**
+     *
+     * @return
+     */
+    @Override
+    public int initAllReplaceConfig() {
+        ScanOptions options = ScanOptions.scanOptions()
+                .match(GlobalStaticVariable.WEBSITE_REPLACE_CONTENT_KEY+"*")
+                .count(1000)
+                .build();
+
+        List<String> keys = new ArrayList<>();
+
+        try (Cursor<String> cursor = stringRedisTemplate.scan(options)) {
+            while (cursor.hasNext()) {
+                keys.add(cursor.next());
+            }
+        }
+        if (!keys.isEmpty()) {
+            stringRedisTemplate.delete(keys);
+        }
+        List<WebSiteReplace> all = webSiteReplaceRepository.findAll();
+        for(WebSiteReplace webSiteReplace : all){
+            stringRedisTemplate.opsForValue().set(GlobalStaticVariable.WEBSITE_REPLACE_CONTENT_KEY + webSiteReplace.getWebSiteHost() + webSiteReplace.getUrlPath(), JSONObject.toJSONString(webSiteReplace));
+        }
+        return all.size();
     }
 }
