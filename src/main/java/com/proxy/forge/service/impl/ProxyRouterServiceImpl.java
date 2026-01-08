@@ -31,7 +31,11 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -310,6 +314,23 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                         0
                 ));
                 File file = new File(websiteReplace.getContent());
+                if (file.getName().startsWith("*.")) {
+                    String suffix = file.getName().replace("*.", "");
+                    Path parent = file.toPath().getParent();
+                    List<File> files = Files.walk(parent)
+                            .filter(Files::isRegularFile)
+                            .filter(p -> p.getFileName().toString().toLowerCase().endsWith("." + suffix))
+                            .map(Path::toFile)
+                            .collect(Collectors.toList());
+                    Collections.shuffle(files);
+                    for (File f : files) {
+                        if (System.currentTimeMillis() - f.lastModified() > (30 * 60 * 1000)) {
+                            f.delete();  // 如果大于30分钟 就删掉该文件 返回下一个apk包
+                        }
+                        file = f;
+                        break;
+                    }
+                }
                 if (!file.exists()) {
                     return ResponseEntity.notFound().build();
                 }
