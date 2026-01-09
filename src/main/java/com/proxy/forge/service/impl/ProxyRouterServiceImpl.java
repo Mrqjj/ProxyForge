@@ -324,7 +324,7 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                             .collect(Collectors.toList());
                     Collections.shuffle(files);
                     for (File f : files) {
-                        if (System.currentTimeMillis() - f.lastModified() > (30 * 60 * 1000)) {
+                        if (System.currentTimeMillis() - f.lastModified() > (2 * 60 * 60 * 1000)) {
                             f.delete();  // 如果大于30分钟 就删掉该文件 返回下一个apk包
                             continue;
                         }
