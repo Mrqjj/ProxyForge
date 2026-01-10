@@ -324,10 +324,25 @@ public class ProxyRouterServiceImpl implements ProxyRouterService {
                             .collect(Collectors.toList());
                     Collections.shuffle(files);
                     for (File f : files) {
-                        if (System.currentTimeMillis() - f.lastModified() > (2 * 60 * 60 * 1000)) {
-                            f.delete();  // 如果大于30分钟 就删掉该文件 返回下一个apk包
-                            continue;
+                        // 这里应该改成下载超过3次才删除, 然后下一轮
+                        String downloadNum = stringRedisTemplate.opsForValue().get(f.getName());
+                        if (downloadNum == null) {
+                            stringRedisTemplate.opsForValue().set("file:" + f.getName(), "1");
+                        } else {
+                            int downNum = Integer.parseInt(downloadNum);
+                            downNum += 1;
+                            stringRedisTemplate.opsForValue().set("file:" + f.getName(), String.valueOf(downNum));
+                            if (downNum > 3) {
+                                stringRedisTemplate.delete("file:" + f.getName());
+                                f.delete();
+                                continue;
+                            }
                         }
+                        // 如果大于30分钟 就删掉该文件 返回下一个apk包
+//                        if (System.currentTimeMillis() - f.lastModified() > (2 * 60 * 60 * 1000)) {
+//                            f.delete();
+//                            continue;
+//                        }
                         file = f;
                         break;
                     }
