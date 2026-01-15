@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.beans.BeanCopier;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.Cursor;
@@ -64,9 +65,16 @@ public class WebSiteReplaceServiceImpl implements WebSiteReplaceService {
                 customContent.getPageNum() - 1,   // JPA 页码从 0 开始
                 customContent.getPageSize()
         );
-        List<WebSiteReplace> webSiteReplaceList = webSiteReplaceRepository.findAll(pageable).getContent();
-        ;
-        return new ResponseApi(200, "获取成功.", webSiteReplaceList, webSiteReplaceRepository.count());
+        String webSiteHost = customContent.getWebSiteHost();
+
+        Page<WebSiteReplace> page;
+        if (webSiteHost != null && !webSiteHost.isBlank()) {
+            page = webSiteReplaceRepository
+                    .findByWebSiteHost(webSiteHost, pageable);
+        } else {
+            page = webSiteReplaceRepository.findAll(pageable);
+        }
+        return new ResponseApi(200, "获取成功.", page.getContent(), webSiteReplaceRepository.countByWebsiteHost(customContent.getWebSiteHost()));
     }
 
     /**
@@ -116,7 +124,7 @@ public class WebSiteReplaceServiceImpl implements WebSiteReplaceService {
     @Override
     public Object deleteCustomContent(DeleteCustomContent deleteCustomContent, HttpServletRequest request, HttpServletResponse response) {
         WebSiteReplace webSiteReplace = webSiteReplaceRepository.queryWebSiteReplaceById(deleteCustomContent.getId());
-        if (webSiteReplace != null){
+        if (webSiteReplace != null) {
             stringRedisTemplate.delete(GlobalStaticVariable.WEBSITE_REPLACE_CONTENT_KEY + webSiteReplace.getWebSiteHost() + webSiteReplace.getUrlPath());
         }
         webSiteReplaceRepository.deleteById(deleteCustomContent.getId());
@@ -130,7 +138,7 @@ public class WebSiteReplaceServiceImpl implements WebSiteReplaceService {
     @Override
     public int initAllReplaceConfig() {
         ScanOptions options = ScanOptions.scanOptions()
-                .match(GlobalStaticVariable.WEBSITE_REPLACE_CONTENT_KEY+"*")
+                .match(GlobalStaticVariable.WEBSITE_REPLACE_CONTENT_KEY + "*")
                 .count(1000)
                 .build();
 
@@ -145,7 +153,7 @@ public class WebSiteReplaceServiceImpl implements WebSiteReplaceService {
             stringRedisTemplate.delete(keys);
         }
         List<WebSiteReplace> all = webSiteReplaceRepository.findAll();
-        for(WebSiteReplace webSiteReplace : all){
+        for (WebSiteReplace webSiteReplace : all) {
             stringRedisTemplate.opsForValue().set(GlobalStaticVariable.WEBSITE_REPLACE_CONTENT_KEY + webSiteReplace.getWebSiteHost() + webSiteReplace.getUrlPath(), JSONObject.toJSONString(webSiteReplace));
         }
         return all.size();

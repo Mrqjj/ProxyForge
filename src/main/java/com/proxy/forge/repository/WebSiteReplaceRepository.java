@@ -2,6 +2,8 @@ package com.proxy.forge.repository;
 
 import com.proxy.forge.dto.WebSiteReplace;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -53,4 +55,15 @@ public interface WebSiteReplaceRepository extends JpaRepository<WebSiteReplace,I
      */
     @Query(value = "select w from WebSiteReplace w where w.id=:id")
     WebSiteReplace queryWebSiteReplaceById(@Param("id") Integer id);
+
+    /**
+     * 根据域名查询
+     * @param host
+     * @return
+     */
+    @Query(value = "select count(*) from WebSiteReplace w where w.webSiteHost=:host")
+    int countByWebsiteHost(@Param("host") String host);
+
+    @Query(value = "select w from WebSiteReplace w where w.webSiteHost=:host")
+    Page<WebSiteReplace> findByWebSiteHost(@Param("host")String webSiteHost, Pageable pageable);
 }
